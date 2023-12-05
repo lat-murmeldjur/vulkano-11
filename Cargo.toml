@@ -1,0 +1,24 @@
+[package]
+name = "erosion-coding"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# The `vulkano` crate is the main crate that you must use to use Vulkan.
+#vulkano = { path = "./vulkano/vulkano", features = ["serde"] }
+## Provides the `shader!` macro that is used to generate code for using shaders.
+#vulkano-shaders = { path = "./vulkano/vulkano-shaders" }
+#vulkano-util = { path = "./vulkano/vulkano-util" }
+
+vulkano = { git = "https://github.com/vulkano-rs/vulkano.git" }
+winit = { git = "https://github.com/rust-windowing/winit.git" , features = ["rwh_05"] }
+cgmath = { git = "https://github.com/rustgd/cgmath.git" }
+glium = { git = "https://github.com/glium/glium.git" }
+png = { git = "https://github.com/image-rs/image-png.git" }
+rand = { git = "https://github.com/rust-random/rand.git" }
+ron = { git = "https://github.com/ron-rs/ron" }
+serde = { git = "https://github.com/serde-rs/serde.git" , features = ["derive"] }
+vulkano-shaders = { git = "https://github.com/vulkano-rs/vulkano.git" } 
+vulkano-util = { git = "https://github.com/vulkano-rs/vulkano.git" }
