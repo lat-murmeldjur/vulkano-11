@@ -23,7 +23,7 @@ use magma_ocean::{magma, petrify, Normal, Position, Stone};
 mod moving_around;
 use moving_around::{
     move_elevation, move_forwards, move_in_x, move_in_y, move_in_z, move_sideways,
-    rotate_horizontal, rotate_up,
+    rotate_horizontal, rotate_up, rotate_vertical,
 };
 
 use cgmath::{Matrix3, Matrix4, Point3, Rad, Vector3};
@@ -308,6 +308,8 @@ fn main() {
     let mut rotating_right = false;
     let mut turning_left = false;
     let mut turning_right = false;
+    let mut turning_up = false;
+    let mut turning_down = false;
 
     duration_since_epoch_nanos = display_time_elapsed_nice(duration_since_epoch_nanos);
 
@@ -359,6 +361,12 @@ fn main() {
                 PhysicalKey::Code(KeyCode::KeyC) => {
                     turning_right = true;
                 }
+                PhysicalKey::Code(KeyCode::KeyT) => {
+                    turning_up = true;
+                }
+                PhysicalKey::Code(KeyCode::KeyG) => {
+                    turning_down = true;
+                }
                 _ => (),
             },
             Event::DeviceEvent {
@@ -399,6 +407,12 @@ fn main() {
                 }
                 PhysicalKey::Code(KeyCode::KeyC) => {
                     turning_right = false;
+                }
+                PhysicalKey::Code(KeyCode::KeyT) => {
+                    turning_up = false;
+                }
+                PhysicalKey::Code(KeyCode::KeyG) => {
+                    turning_down = false;
                 }
                 _ => (),
             },
@@ -441,6 +455,12 @@ fn main() {
                     }
                     if turning_right {
                         rotate_horizontal(&mut view_point, &mut center, &mut up_direction, 0.01);
+                    }
+                    if turning_up {
+                        rotate_vertical(&mut view_point, &mut center, &mut up_direction, 0.01);
+                    }
+                    if turning_down {
+                        rotate_vertical(&mut view_point, &mut center, &mut up_direction, -0.01);
                     }
 
                     let image_extent: [u32; 2] = window.inner_size().into();
