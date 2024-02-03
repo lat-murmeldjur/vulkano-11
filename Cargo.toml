@@ -6,12 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-# The `vulkano` crate is the main crate that you must use to use Vulkan.
-#vulkano = { path = "./vulkano/vulkano", features = ["serde"] }
-## Provides the `shader!` macro that is used to generate code for using shaders.
-#vulkano-shaders = { path = "./vulkano/vulkano-shaders" }
-#vulkano-util = { path = "./vulkano/vulkano-util" }
-
+# The "Make Each Monday Entertaining As A Service" Module
 vulkano = { git = "https://github.com/vulkano-rs/vulkano.git" }
 winit = { git = "https://github.com/rust-windowing/winit.git" , features = ["rwh_05"] }
 cgmath = { git = "https://github.com/rustgd/cgmath.git" }

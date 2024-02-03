@@ -38,12 +38,11 @@ use vulkano::{
         Buffer, BufferCreateInfo, BufferUsage, Subbuffer,
     },
     command_buffer::{
-        allocator::StandardCommandBufferAllocator, AutoCommandBufferBuilder, CommandBufferUsage,
-        RenderPassBeginInfo,
+        allocator::StandardCommandBufferAllocator, CommandBufferBeginInfo, CommandBufferLevel,
+        CommandBufferUsage, RecordingCommandBuffer, RenderPassBeginInfo,
     },
     descriptor_set::{
-        allocator::StandardDescriptorSetAllocator,
-        allocator::StandardDescriptorSetAllocatorCreateInfo, DescriptorSet, WriteDescriptorSet,
+        allocator::StandardDescriptorSetAllocator, DescriptorSet, WriteDescriptorSet,
     },
     device::{
         physical::PhysicalDeviceType, Device, DeviceCreateInfo, DeviceExtensions, DeviceOwned,
@@ -567,10 +566,14 @@ fn main() {
                         recreate_swapchain = true;
                     }
 
-                    let mut builder = AutoCommandBufferBuilder::primary(
+                    let mut builder = RecordingCommandBuffer::new(
                         command_buffer_allocator.clone(),
                         queue.queue_family_index(),
-                        CommandBufferUsage::OneTimeSubmit,
+                        CommandBufferLevel::Primary,
+                        CommandBufferBeginInfo {
+                            usage: CommandBufferUsage::OneTimeSubmit,
+                            ..Default::default()
+                        },
                     )
                     .unwrap();
                     builder
@@ -599,18 +602,17 @@ fn main() {
                         .bind_vertex_buffers(0, (vertex_buffer.clone(), normals_buffer.clone()))
                         .unwrap()
                         .bind_index_buffer(index_buffer.clone())
-                        .unwrap()
-                        .draw_indexed(index_buffer.len() as u32, 1, 0, 0, 0)
-                        .unwrap()
-                        .bind_vertex_buffers(0, (vertex_buffer.clone(), normals_buffer.clone()))
-                        .unwrap()
-                        .bind_index_buffer(index_buffer.clone())
-                        .unwrap()
-                        .draw_indexed(index_buffer.len() as u32, 1, 0, 0, 0)
-                        .unwrap()
-                        .end_render_pass(Default::default())
                         .unwrap();
-                    let command_buffer = builder.build().unwrap();
+
+                    unsafe {
+                        builder
+                            .draw_indexed(index_buffer.len() as u32, 1, 0, 0, 0)
+                            .unwrap();
+                    }
+
+                    builder.end_render_pass(Default::default()).unwrap();
+
+                    let command_buffer = builder.end().unwrap();
 
                     let future = previous_frame_end
                         .take()
