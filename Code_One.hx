@@ -76,7 +76,7 @@ class Code_One {
 		}
 		var kxmd = sys.io.File.getContent(jxmd); 
 		var chr0n = Std.parseInt(kxmd);
-		if (kxmd != '' && chr0n != 0 ) {
+		if (kxmd != '') {
 			chr0n++;
 			kxmd = Std.string(chr0n);
 			sys.io.File.saveContent(jxmd, kxmd);
