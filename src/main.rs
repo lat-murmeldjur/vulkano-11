@@ -78,13 +78,13 @@ use vulkano::{
 use winit::{
     dpi::{LogicalPosition, LogicalSize},
     event::{DeviceEvent, ElementState, Event, KeyEvent, RawKeyEvent, WindowEvent},
-    event_loop::{ControlFlow, EventLoop, EventLoopWindowTarget},
+    event_loop::{ActiveEventLoop, ControlFlow, EventLoop},
     keyboard::{Key, KeyCode, ModifiersState, PhysicalKey},
 
     // WARNING: This is not available on all platforms (for example on the web).
     platform::modifier_supplement::KeyEventExtModifierSupplement,
     raw_window_handle::HasRawWindowHandle,
-    window::{Fullscreen, Window, WindowBuilder, WindowId},
+    window::{Fullscreen, Window, WindowAttributes, WindowId},
 };
 
 fn main() {
@@ -119,12 +119,11 @@ fn main() {
     )
     .unwrap();
 
-    let window = Arc::new(
-        WindowBuilder::new()
-            .with_fullscreen(Some(Fullscreen::Borderless(None)))
-            .build(&event_loop)
-            .unwrap(),
-    );
+    let window_attributes = Window::default_attributes()
+        .with_title("Vulkano 11")
+        .with_fullscreen(Some(Fullscreen::Borderless(None)));
+
+    let window = Arc::new(Some(event_loop.create_window(window_attributes).unwrap()).unwrap());
 
     let surface = Surface::from_window(instance.clone(), window.clone()).unwrap();
 
