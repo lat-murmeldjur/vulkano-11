@@ -10,6 +10,8 @@ use crate::f32_3::{
     nrmlz_f32_3, sbtr_f32_3, vector_length,
 };
 
+use crate::shapes::f32_3_dots_collinear;
+
 use crate::u_modular::{
     modular_difference, modular_difference_in_range, modular_offset, modular_offset_in_range,
 };
@@ -45,7 +47,6 @@ pub struct Stone {
 pub fn wait_for_a_minute() {
     let tsn3 = Duration::from_secs(60);
     // Print text to the console.
-
     thread::sleep(tsn3);
 }
 
@@ -95,30 +96,21 @@ pub fn petrify(flow: Magma) -> Stone {
     let points_diff = sbtr_f32_3(flow.positions[1].position, flow.positions[0].position);
     let planes_normal: [f32; 3] = nrmlz_f32_3(points_diff);
     let planes_number = rng.gen_range(16..32);
-    let outer_planes = planes_number / 8;
-    let total_planes_number = planes_number + outer_planes;
-    let mut planes_points = Vec::new();
 
-    for i in 0..total_planes_number {
-        planes_points.push(dd_f32_3(
-            mltply_f32_3(
-                points_diff,
-                ((i as f32) - ((outer_planes / 2) as f32)) / (planes_number as f32),
-            ),
-            flow.positions[0].position,
-        ));
-    }
-
-    // println!("{:#?}", planes_points);
-
-    println!("normal: {:#?}", planes_normal);
-
-    let mut previous_plane: [u32; 3] = [0, 0, 0]; // plane number, beginning position, ending position
     let mut points_of_plane: u32 = 3;
     let mut points_range = 15.0;
     let mut points_range_min = 2.0;
     let reference_orthogonal = gen_rthgnl_f32_3(planes_normal, &mut rng);
     let mut pln = 0;
+
+    let planes_points = f32_3_dots_collinear(
+        flow.positions[0].position,
+        flow.positions[1].position,
+        planes_number,
+    );
+
+    let mut previous_plane: [u32; 3] = [0, 0, 0]; // plane number, beginning position, ending position
+
     for planae in planes_points.iter() {
         println!("plane: {:#?}", planae);
 
@@ -219,7 +211,7 @@ pub fn petrify(flow: Magma) -> Stone {
                 &mut stone,
             );
         };
-        if previous_plane[0] == total_planes_number - 2 {
+        if previous_plane[0] == planes_number - 2 {
             stone.indices.push((stone.positions.len() - 3) as u32);
             stone.indices.push((stone.positions.len() - 2) as u32);
             stone.indices.push((stone.positions.len() - 1) as u32);
@@ -239,11 +231,11 @@ pub fn petrify(flow: Magma) -> Stone {
             points_of_plane = points_of_plane + points_increase;
         };
 
-        if previous_plane[0] == total_planes_number - 2 {
+        if previous_plane[0] == planes_number - 2 {
             points_of_plane = 3;
         };
 
-        if previous_plane[0] < total_planes_number / 2 {
+        if previous_plane[0] < planes_number / 2 {
             points_range = points_range + rng.gen_range(0.1..4.0);
             points_range_min = rng.gen_range(points_range_min / 2.0..points_range - 2.0);
         //_min + 2.0);

@@ -14,6 +14,7 @@ use display_mods::{
 };
 
 mod f32_3;
+mod shapes;
 
 mod u_modular;
 
