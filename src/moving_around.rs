@@ -1,10 +1,10 @@
 use crate::f32_3::{
     angle_360_of, angle_of, angular_difference, average_f32_2, dd_f32_3, dot_product, dstnc_f32_3,
-    find_orthogonal_f32_3, find_points_normal, gen_f32_3, gen_f32_3_on_point_normal_plane,
-    gen_rthgnl_f32_3, mltply_f32_3, nrmlz_f32_3, sbtr_f32_3, vector_length,
+    find_orthogonal_f32_3, find_points_normal, gen_f32_3, gen_rthgnl_f32_3, mltply_f32_3,
+    nrmlz_f32_3, sbtr_f32_3, vector_length,
 };
 
-use crate::magma_ocean::Position;
+use crate::positions::Position;
 
 // mod u_modular;
 // use u_modular::{

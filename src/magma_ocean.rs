@@ -4,31 +4,19 @@ use std::thread;
 use std::time::{Duration, SystemTime};
 use vulkano::{buffer::BufferContents, pipeline::graphics::vertex_input::Vertex};
 
+use crate::positions::{create_points_on_cross_section, sort_positions_by_angle, Normal, Position};
+
 use crate::f32_3::{
     angle_360_of, angle_of, angular_difference, average_f32_2, dd_f32_3, dot_product, dstnc_f32_3,
-    find_points_normal, gen_f32_3, gen_f32_3_on_point_normal_plane, gen_rthgnl_f32_3, mltply_f32_3,
-    nrmlz_f32_3, sbtr_f32_3, vector_length,
+    find_points_normal, gen_f32_3, gen_f32_3_unit_on_point_normal_plane, gen_rthgnl_f32_3,
+    mltply_f32_3, nrmlz_f32_3, sbtr_f32_3, vector_length,
 };
 
-use crate::shapes::f32_3_dots_collinear;
+use crate::shapes::{f32_3_dots_collinear, rotational_distance_function_sine};
 
 use crate::u_modular::{
     modular_difference, modular_difference_in_range, modular_offset, modular_offset_in_range,
 };
-
-#[derive(BufferContents, Vertex, Debug, Clone, Copy)]
-#[repr(C)]
-pub struct Position {
-    #[format(R32G32B32_SFLOAT)]
-    pub position: [f32; 3],
-}
-
-#[derive(BufferContents, Vertex, Debug)]
-#[repr(C)]
-pub struct Normal {
-    #[format(R32G32B32_SFLOAT)]
-    normal: [f32; 3],
-}
 
 #[derive(Debug)]
 pub struct Magma {
@@ -98,10 +86,11 @@ pub fn petrify(flow: Magma) -> Stone {
     let planes_number = rng.gen_range(16..32);
 
     let mut points_of_plane: u32 = 3;
-    let mut points_range = 15.0;
-    let mut points_range_min = 2.0;
+    let mut points_range = 10.0;
+    let mut points_range_min = 12.0;
     let reference_orthogonal = gen_rthgnl_f32_3(planes_normal, &mut rng);
     let mut pln = 0;
+    points_of_plane = 3;
 
     let planes_points = f32_3_dots_collinear(
         flow.positions[0].position,
@@ -111,8 +100,10 @@ pub fn petrify(flow: Magma) -> Stone {
 
     let mut previous_plane: [u32; 3] = [0, 0, 0]; // plane number, beginning position, ending position
 
-    for planae in planes_points.iter() {
-        println!("plane: {:#?}", planae);
+    let rotational_arguments_vector = vec![15.0, 1.0, 1.0, 1.0];
+
+    for plane_point in planes_points.iter() {
+        println!("plane: {:#?}", plane_point);
 
         let mut plane = Stone {
             positions: vec![],
@@ -120,64 +111,30 @@ pub fn petrify(flow: Magma) -> Stone {
             indices: vec![],
         };
 
-        let mut k: usize = 1;
-        if previous_plane[2] > 0 {
-            k = previous_plane[0] as usize;
-        };
+        plane.positions = create_points_on_cross_section(
+            rotational_distance_function_sine,
+            rotational_arguments_vector.clone(),
+            reference_orthogonal,
+            planes_normal,
+            *plane_point,
+            points_of_plane, //points_number
+            &mut rng,
+        );
 
-        // get random points on plane in range
-
-        for i in 1..=points_of_plane {
-            plane.positions.push(Position {
-                position: gen_f32_3_on_point_normal_plane(
-                    planes_normal,
-                    points_range_min,
-                    points_range,
-                    *planae,
-                    &mut rng,
-                ),
-            });
-        }
-
-        // order points on plane by angle
-
-        let mut planes_points_average = [0.0, 0.0, 0.0];
-        for i in 0..plane.positions.len() {
-            planes_points_average = dd_f32_3(planes_points_average, plane.positions[i].position);
-        }
-
-        planes_points_average =
-            mltply_f32_3(planes_points_average, 1.0 / (plane.positions.len() as f32));
-
-        let planes_points_center = sbtr_f32_3(planes_points_average, *planae);
-
-        plane.positions.sort_by(|a, b| {
-            angle_360_of(
-                *planae,
-                sbtr_f32_3(a.position, planes_points_center),
-                reference_orthogonal,
-                planes_normal,
-            )
-            .total_cmp(&angle_360_of(
-                *planae,
-                sbtr_f32_3(b.position, planes_points_center),
-                reference_orthogonal,
-                planes_normal,
-            ))
-        });
-
-        // add points and normals to stone
+        sort_positions_by_angle(
+            *plane_point,
+            reference_orthogonal,
+            planes_normal,
+            &mut plane.positions,
+        );
 
         for i in 0..points_of_plane {
             stone.positions.push(Position {
                 position: plane.positions[(i as usize)].position,
             });
-            let normal =
-                find_points_normal(plane.positions[(i as usize)].position, planes_points[k]);
+            let normal = find_points_normal(plane.positions[(i as usize)].position, *plane_point);
             stone.normals.push(Normal { normal: normal });
         }
-
-        // add indices
 
         if previous_plane[2] == 0 {
             stone.indices.push(0);
@@ -194,7 +151,7 @@ pub fn petrify(flow: Magma) -> Stone {
                 previous_plane[2],
                 previous_plane[2] + points_of_plane - 1
             );
-            find_indices_between_circles(
+            find_indices_double_circle(
                 //vertex_plane_one: [u32; 2],
                 [previous_plane[1], previous_plane[2] - 1],
                 //plane_one: [f32; 3],
@@ -202,7 +159,7 @@ pub fn petrify(flow: Magma) -> Stone {
                 //vertex_plane_two: [u32; 2],
                 [previous_plane[2], previous_plane[2] + points_of_plane - 1],
                 //plane_two: [f32; 3],
-                *planae,
+                *plane_point,
                 //reference_orthogonal: [f32; 3],
                 reference_orthogonal,
                 //planes_normal: [f32;3],
@@ -224,25 +181,10 @@ pub fn petrify(flow: Magma) -> Stone {
         previous_plane[1] = previous_plane[2];
         previous_plane[2] = previous_plane[2] + points_of_plane;
 
-        let points_increase = rng.gen_range(1..3);
-        if points_of_plane > 8 {
-            points_of_plane = points_of_plane - points_increase;
-        } else {
-            points_of_plane = points_of_plane + points_increase;
-        };
-
         if previous_plane[0] == planes_number - 2 {
             points_of_plane = 3;
-        };
-
-        if previous_plane[0] < planes_number / 2 {
-            points_range = points_range + rng.gen_range(0.1..4.0);
-            points_range_min = rng.gen_range(points_range_min / 2.0..points_range - 2.0);
-        //_min + 2.0);
         } else {
-            points_range = points_range - rng.gen_range(0.1..4.0);
-            points_range_min = rng.gen_range(points_range_min / 2.0..points_range - 2.0);
-            // _min);
+            points_of_plane = 16;
         };
     }
 
@@ -255,26 +197,6 @@ pub fn petrify_flow(flow: Magma) -> Stone {
         normals: vec![],
         indices: vec![],
     };
-}
-
-pub fn find_indices_between_circles(
-    vertex_plane_one: [u32; 2],
-    plane_one: [f32; 3],
-    vertex_plane_two: [u32; 2],
-    plane_two: [f32; 3],
-    reference_orthogonal: [f32; 3],
-    planes_normal: [f32; 3],
-    stone: &mut Stone,
-) {
-    find_indices_double_circle(
-        vertex_plane_one,
-        plane_one,
-        vertex_plane_two,
-        plane_two,
-        reference_orthogonal,
-        planes_normal,
-        stone,
-    );
 }
 
 pub fn find_indices_double_circle(

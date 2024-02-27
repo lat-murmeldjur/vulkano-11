@@ -14,12 +14,14 @@ use display_mods::{
 };
 
 mod f32_3;
-mod shapes;
+mod positions;
+use positions::{Normal, Position};
 
+mod shapes;
 mod u_modular;
 
 mod magma_ocean;
-use magma_ocean::{magma, petrify, Normal, Position, Stone};
+use magma_ocean::{magma, petrify, Stone};
 
 mod moving_around;
 use moving_around::{

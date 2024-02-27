@@ -125,17 +125,12 @@ pub fn angular_difference(a: f32, b: f32) -> f32 {
     }
 }
 
-pub fn gen_f32_3_on_point_normal_plane(
+pub fn gen_f32_3_unit_on_point_normal_plane(
     planes_normal: [f32; 3],
-    points_range_min: f32,
-    points_range: f32,
     planes_point: [f32; 3],
+    unit: f32,
     rng: &mut ThreadRng,
 ) -> [f32; 3] {
     let random_vector_on_plane = gen_rthgnl_f32_3(planes_normal, rng);
-    let random_range = rng.gen_range(points_range_min..points_range);
-    return dd_f32_3(
-        mltply_f32_3(random_vector_on_plane, random_range),
-        planes_point,
-    );
+    return dd_f32_3(mltply_f32_3(random_vector_on_plane, unit), planes_point);
 }
