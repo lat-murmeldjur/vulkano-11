@@ -100,10 +100,10 @@ pub fn petrify(flow: Magma) -> Stone {
 
     let mut previous_plane: [u32; 3] = [0, 0, 0]; // plane number, beginning position, ending position
 
-    let rotational_arguments_vector = vec![32.0, 16.0, 2.0, 4.0]; // f_const: f32,
-                                                                  // f_multiplier: f32,
-                                                                  // x_const: f32,
-                                                                  // x_multiplier: f32,
+    let rotational_arguments_vector = vec![320.0, 16.0, 2.0, 4.0]; // f_const: f32,
+                                                                   // f_multiplier: f32,
+                                                                   // x_const: f32,
+                                                                   // x_multiplier: f32,
     for plane_point in planes_points.iter() {
         println!("plane: {:#?}", plane_point);
 
