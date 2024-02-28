@@ -368,6 +368,13 @@ fn main() {
                 PhysicalKey::Code(KeyCode::KeyG) => {
                     turning_down = true;
                 }
+                PhysicalKey::Code(KeyCode::KeyP) => {
+                    if (rot_static) {
+                        rot_static = false;
+                    } else {
+                        rot_static = true;
+                    }
+                }
                 _ => (),
             },
             Event::DeviceEvent {
