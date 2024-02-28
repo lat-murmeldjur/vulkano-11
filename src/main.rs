@@ -324,6 +324,23 @@ fn main() {
     event_loop.run(move |event, control_flow| {
         match event {
             Event::DeviceEvent {
+                event: DeviceEvent::MouseMotion { delta, .. },
+                ..
+            } => {
+                rotate_horizontal(
+                    &mut view_point,
+                    &mut center,
+                    &mut up_direction,
+                    delta.0 as f32 / 1000.0,
+                );
+                rotate_vertical(
+                    &mut view_point,
+                    &mut center,
+                    &mut up_direction,
+                    delta.1 as f32 / 1000.0,
+                );
+            }
+            Event::DeviceEvent {
                 event:
                     DeviceEvent::Key(RawKeyEvent {
                         physical_key,
