@@ -331,13 +331,13 @@ fn main() {
                     &mut view_point,
                     &mut center,
                     &mut up_direction,
-                    delta.0 as f32 / 1000.0,
+                    delta.0 as f32 / 100.0,
                 );
                 rotate_vertical(
                     &mut view_point,
                     &mut center,
                     &mut up_direction,
-                    delta.1 as f32 / 1000.0,
+                    delta.1 as f32 / 100.0,
                 );
             }
             Event::DeviceEvent {

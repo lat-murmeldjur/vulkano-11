@@ -1,7 +1,6 @@
 use crate::f32_3::{
-    angle_360_of, angle_of, angular_difference, average_f32_2, dd_f32_3, dot_product, dstnc_f32_3,
-    find_orthogonal_f32_3, find_points_normal, gen_f32_3, gen_rthgnl_f32_3, mltply_f32_3,
-    nrmlz_f32_3, sbtr_f32_3, vector_length,
+    dd_f32_3, dot_product, dstnc_f32_3, find_orthogonal_f32_3, find_points_normal, mltply_f32_3,
+    sbtr_f32_3,
 };
 
 use crate::positions::Position;
@@ -118,6 +117,7 @@ pub fn rotate_horizontal(
     let look_distance = dstnc_f32_3(view_point.position, center.position);
     let orthogonal = find_orthogonal_f32_3(look_direction, up_direction.position);
     let second_orthogonal = find_orthogonal_f32_3(look_direction, orthogonal);
+    up_direction.position = mltply_f32_3(second_orthogonal, -1.0);
 
     let rodrigues_part_one = dd_f32_3(
         mltply_f32_3(look_direction, cos_t),
