@@ -150,6 +150,7 @@ pub fn rotate_vertical(
     let look_direction = find_points_normal(view_point.position, center.position);
     let look_distance = dstnc_f32_3(view_point.position, center.position);
     let orthogonal = find_orthogonal_f32_3(look_direction, up_direction.position);
+    up_direction.position = mltply_f32_3(find_orthogonal_f32_3(look_direction, orthogonal), -1.0);
 
     let rodrigues_part_one = dd_f32_3(
         mltply_f32_3(look_direction, cos_t),

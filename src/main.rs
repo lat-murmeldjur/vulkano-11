@@ -128,6 +128,8 @@ fn main() {
 
     let window = Arc::new(Some(event_loop.create_window(window_attributes).unwrap()).unwrap());
 
+    window.set_cursor_visible(false);
+
     let surface = Surface::from_window(instance.clone(), window.clone()).unwrap();
 
     let device_extensions = DeviceExtensions {
@@ -331,13 +333,13 @@ fn main() {
                     &mut view_point,
                     &mut center,
                     &mut up_direction,
-                    delta.0 as f32 / 100.0,
+                    delta.0 as f32 / 400.0,
                 );
                 rotate_vertical(
                     &mut view_point,
                     &mut center,
                     &mut up_direction,
-                    delta.1 as f32 / 100.0,
+                    delta.1 as f32 / 400.0,
                 );
             }
             Event::DeviceEvent {
