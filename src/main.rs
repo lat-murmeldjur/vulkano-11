@@ -15,7 +15,7 @@ use display_mods::{
 
 mod f32_3;
 mod positions;
-use positions::{Normal, Position};
+use positions::{move_positions, Normal, Position};
 
 mod shapes;
 mod u_modular;
@@ -70,6 +70,7 @@ use vulkano::{
         GraphicsPipeline, Pipeline, PipelineBindPoint, PipelineLayout,
         PipelineShaderStageCreateInfo,
     },
+    query::{QueryControlFlags, QueryPool, QueryPoolCreateInfo, QueryResultFlags, QueryType},
     render_pass::{Framebuffer, FramebufferCreateInfo, RenderPass, Subpass},
     shader::EntryPoint,
     swapchain::{
@@ -101,8 +102,9 @@ fn main() {
         duration_since_epoch_nanos.group_with_nothing()
     );
 
-    let stone = petrify(magma(2, 10.0));
-    let pebble = petrify(magma(2, 2.0));
+    let mut stone = petrify(magma(2, 10.0));
+    let mut pebble = petrify(magma(2, 50.0));
+    move_positions(&mut pebble.positions, [-30.0, 20.0, -30.0]);
 
     ///|||\\\///|||\\\///|||\\\///|||\\\///|||\\\///|||\\\[ Main ]///|||\\\///|||\\\///|||\\\///|||\\\///|||\\\///|||\\\
     ///|||\\\
@@ -317,6 +319,16 @@ fn main() {
     duration_since_epoch_nanos = display_time_elapsed_nice(duration_since_epoch_nanos);
 
     let mut modifiers = ModifiersState::default();
+
+    // Create a query pool for occlusion queries, with 3 slots.
+    let query_pool = QueryPool::new(
+        device.clone(),
+        QueryPoolCreateInfo {
+            query_count: 3,
+            ..QueryPoolCreateInfo::query_type(QueryType::Occlusion)
+        },
+    )
+    .unwrap();
 
     //|||\\\///|||\\\///|||\\\///|||\\\///|||\\\///|||\\\[ loop ]///|||\\\///|||\\\///|||\\\///|||\\\///|||\\\///|||\\\///|||\\\
     //|||\\\
@@ -604,37 +616,66 @@ fn main() {
                         },
                     )
                     .unwrap();
-                    builder
-                        .begin_render_pass(
-                            RenderPassBeginInfo {
-                                clear_values: vec![
-                                    Some([0.0, 0.0, 1.0, 1.0].into()),
-                                    Some(1f32.into()),
-                                ],
-                                ..RenderPassBeginInfo::framebuffer(
-                                    framebuffers[image_index as usize].clone(),
-                                )
-                            },
-                            Default::default(),
-                        )
-                        .unwrap()
-                        .bind_pipeline_graphics(pipeline.clone())
-                        .unwrap()
-                        .bind_descriptor_sets(
-                            PipelineBindPoint::Graphics,
-                            pipeline.layout().clone(),
-                            0,
-                            set,
-                        )
-                        .unwrap()
-                        .bind_vertex_buffers(0, (vertex_buffer.clone(), normals_buffer.clone()))
-                        .unwrap()
-                        .bind_index_buffer(index_buffer.clone())
-                        .unwrap();
-
                     unsafe {
                         builder
-                            .draw_indexed(index_buffer.len() as u32, 1, 0, 0, 0)
+                            .reset_query_pool(query_pool.clone(), 0..3)
+                            .unwrap()
+                            .begin_render_pass(
+                                RenderPassBeginInfo {
+                                    clear_values: vec![
+                                        Some([0.0, 0.0, 1.0, 1.0].into()),
+                                        Some(1f32.into()),
+                                    ],
+                                    ..RenderPassBeginInfo::framebuffer(
+                                        framebuffers[image_index as usize].clone(),
+                                    )
+                                },
+                                Default::default(),
+                            )
+                            .unwrap()
+                            .bind_pipeline_graphics(pipeline.clone())
+                            .unwrap()
+                            .bind_descriptor_sets(
+                                PipelineBindPoint::Graphics,
+                                pipeline.layout().clone(),
+                                0,
+                                set,
+                            )
+                            .unwrap()
+                            .begin_query(
+                                query_pool.clone(),
+                                0,
+                                QueryControlFlags::empty(),
+                                // QueryControlFlags::PRECISE,
+                            )
+                            .unwrap()
+                            .bind_vertex_buffers(0, (vertex_buffer.clone(), normals_buffer.clone()))
+                            .unwrap()
+                            .bind_index_buffer(index_buffer.clone())
+                            .unwrap();
+
+                        builder
+                            .draw_indexed(index_buffer.len() as u32 as u32, 1, 0, 0, 0)
+                            .unwrap()
+                            .end_query(query_pool.clone(), 0)
+                            .unwrap()
+                            .begin_query(
+                                query_pool.clone(),
+                                0,
+                                QueryControlFlags::empty(),
+                                // QueryControlFlags::PRECISE,
+                            )
+                            .unwrap()
+                            .bind_vertex_buffers(
+                                0,
+                                (vertex_buffer2.clone(), normals_buffer2.clone()),
+                            )
+                            .unwrap()
+                            .bind_index_buffer(index_buffer2.clone())
+                            .unwrap()
+                            .draw_indexed(index_buffer.len() as u32 as u32, 1, 0, 0, 0)
+                            .unwrap()
+                            .end_query(query_pool.clone(), 0)
                             .unwrap();
                     }
 

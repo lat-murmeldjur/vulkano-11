@@ -82,3 +82,9 @@ pub fn sort_positions_by_angle(
         ))
     });
 }
+
+pub fn move_positions(positions: &mut Vec<Position>, move_by: [f32; 3]) {
+    for i in 0..positions.len() {
+        positions[i].position = dd_f32_3(positions[i].position, move_by);
+    }
+}
