@@ -23,6 +23,9 @@ mod u_modular;
 mod magma_ocean;
 use magma_ocean::{magma, petrify, Stone};
 
+mod anomaly;
+use anomaly::Anomaly;
+
 mod moving_around;
 use moving_around::{
     move_elevation, move_forwards, move_in_x, move_in_y, move_in_z, move_sideways,
@@ -104,6 +107,7 @@ fn main() {
 
     let mut stone = petrify(magma(2, 10.0));
     let mut pebble = petrify(magma(2, 50.0));
+    let mut anom = Anomaly { Ays: vec![] };
     move_positions(&mut pebble.positions, [-30.0, 20.0, -30.0]);
 
     ///|||\\\///|||\\\///|||\\\///|||\\\///|||\\\///|||\\\[ Main ]///|||\\\///|||\\\///|||\\\///|||\\\///|||\\\///|||\\\
@@ -652,13 +656,13 @@ fn main() {
                             .bind_vertex_buffers(0, (vertex_buffer.clone(), normals_buffer.clone()))
                             .unwrap()
                             .bind_index_buffer(index_buffer.clone())
-                            .unwrap();
-
-                        builder
+                            .unwrap()
                             .draw_indexed(index_buffer.len() as u32 as u32, 1, 0, 0, 0)
                             .unwrap()
                             .end_query(query_pool.clone(), 0)
-                            .unwrap()
+                            .unwrap();
+
+                        builder
                             .begin_query(
                                 query_pool.clone(),
                                 0,
