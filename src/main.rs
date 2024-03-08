@@ -10,7 +10,8 @@
 
 mod display_mods;
 use display_mods::{
-    display_time_elapsed_nice, record_nanos, wait_one_millis_and_micros_and_nanos, Groupable,
+    display_time_elapsed_nice, oclock, record_nanos, wait_one_millis_and_micros_and_nanos,
+    Groupable,
 };
 
 mod f32_3;
@@ -18,6 +19,7 @@ mod positions;
 use positions::{move_positions, Normal, Position};
 
 mod shapes;
+use shapes::rotational_distance_function_sine;
 mod u_modular;
 
 mod magma_ocean;
@@ -109,6 +111,8 @@ fn main() {
     let mut pebble = petrify(magma(2, 50.0));
     let mut anom = Anomaly { Ays: vec![] };
     move_positions(&mut pebble.positions, [-30.0, 20.0, -30.0]);
+
+    let ocl = oclock().cos();
 
     ///|||\\\///|||\\\///|||\\\///|||\\\///|||\\\///|||\\\[ Main ]///|||\\\///|||\\\///|||\\\///|||\\\///|||\\\///|||\\\
     ///|||\\\
@@ -627,7 +631,15 @@ fn main() {
                             .begin_render_pass(
                                 RenderPassBeginInfo {
                                     clear_values: vec![
-                                        Some([0.0, 0.0, 1.0, 1.0].into()),
+                                        Some(
+                                            [
+                                                0.02 + 0.25 * ocl,
+                                                0.04 + 0.54 * ocl,
+                                                0.07 + 1.0 * ocl,
+                                                1.0,
+                                            ]
+                                            .into(),
+                                        ),
                                         Some(1f32.into()),
                                     ],
                                     ..RenderPassBeginInfo::framebuffer(

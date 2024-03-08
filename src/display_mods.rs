@@ -1,3 +1,4 @@
+use std::f32::consts::PI;
 use std::thread;
 use std::time::{Duration, SystemTime};
 
@@ -57,4 +58,13 @@ pub fn display_time_elapsed_nice(recorded_start: u128) -> u128 {
         (current_time - recorded_start).group_with_nothing()
     ); // this is great
     return current_time;
+}
+
+pub fn oclock() -> f32 {
+    let now = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+
+    return (((now / 60 / 60) % 24) as f32) * PI / 24.0 - PI / 2.0;
 }
