@@ -19,7 +19,6 @@ mod positions;
 use positions::{move_positions, Normal, Position};
 
 mod shapes;
-use shapes::rotational_distance_function_sine;
 mod u_modular;
 
 mod magma_ocean;
@@ -633,9 +632,9 @@ fn main() {
                                     clear_values: vec![
                                         Some(
                                             [
-                                                0.02 + 0.25 * ocl,
-                                                0.04 + 0.54 * ocl,
-                                                0.07 + 1.0 * ocl,
+                                                0.12 + 0.33 * ocl,
+                                                0.14 + 0.50 * ocl,
+                                                0.17 + 0.83 * ocl,
                                                 1.0,
                                             ]
                                             .into(),
@@ -689,7 +688,7 @@ fn main() {
                             .unwrap()
                             .bind_index_buffer(index_buffer2.clone())
                             .unwrap()
-                            .draw_indexed(index_buffer.len() as u32 as u32, 1, 0, 0, 0)
+                            .draw_indexed(index_buffer2.len() as u32 as u32, 1, 0, 0, 0)
                             .unwrap()
                             .end_query(query_pool.clone(), 0)
                             .unwrap();
