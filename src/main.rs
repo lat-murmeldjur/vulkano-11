@@ -109,7 +109,7 @@ fn main() {
     let mut stone = petrify(magma(2, 10.0));
     let mut pebble = petrify(magma(2, 50.0));
     let mut anom = Anomaly { Ays: vec![] };
-    move_positions(&mut pebble.positions, [-30.0, 20.0, -30.0]);
+    move_positions(&mut pebble.positions, [-230.0, 220.0, -230.0]);
 
     let ocl = oclock().cos();
 

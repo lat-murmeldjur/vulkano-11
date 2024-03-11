@@ -83,12 +83,11 @@ pub fn petrify(flow: Magma) -> Stone {
     let mut rng = rand::thread_rng();
     let points_diff = sbtr_f32_3(flow.positions[1].position, flow.positions[0].position);
     let planes_normal: [f32; 3] = nrmlz_f32_3(points_diff);
-    let planes_number = rng.gen_range(4..8);
+    let planes_number = rng.gen_range(24..48);
 
     let mut points_of_plane: u32 = 3;
     let reference_orthogonal = gen_rthgnl_f32_3(planes_normal, &mut rng);
     let mut pln = 0;
-    points_of_plane = 3;
 
     let planes_points = f32_3_dots_collinear(
         flow.positions[0].position,
@@ -98,7 +97,7 @@ pub fn petrify(flow: Magma) -> Stone {
 
     let mut previous_plane: [u32; 3] = [0, 0, 0]; // plane number, beginning position, ending position
 
-    let rotational_arguments_vector = vec![12.0, 32.0, 0.0, 4.0]; // f_const: f32,
+    let rotational_arguments_vector = vec![120.0, 0.0, 0.0, 0.0]; // f_const: f32,
                                                                   // f_multiplier: f32,
                                                                   // x_const: f32,
                                                                   // x_multiplier: f32,
@@ -184,7 +183,7 @@ pub fn petrify(flow: Magma) -> Stone {
         if previous_plane[0] == planes_number - 2 {
             points_of_plane = 3;
         } else {
-            points_of_plane = 8;
+            points_of_plane = rng.gen_range(8..32);
         };
     }
 
@@ -262,6 +261,13 @@ pub fn find_indices_double_circle(
                 k = double_vertex_plane[0];
             }
 
+            // take the points,
+            // get their vector from the circle's average point
+            // translate this distance to the plane point on the interplane-axis ("normal" points)
+            // so the angles we get are circular
+            // no matter if the circle points are not even around the interplane axis
+            // they can be located far away in a single direction
+
             let po1 = sbtr_f32_3(
                 stone.positions[(i as usize)].position,
                 double_planes_points_center,
@@ -276,13 +282,21 @@ pub fn find_indices_double_circle(
             let nrml_point_1 = dd_f32_3(find_points_normal(center, po1), center);
             let nrml_point_2 = dd_f32_3(find_points_normal(center, po2), center);
 
+            // get an average of the two neighboring "normal" points
+            // and find the closest angled "normal" point in the other circle compared to reference orthogonal
+
             let average_point = average_f32_2(vec![nrml_point_1, nrml_point_2]);
 
             for j in single_vertex_plane[0]..=single_vertex_plane[1] {
-                // println!(
-                //     "Finding distance between point number {}, {} and {}",
-                //     i, k, j,
-                // );
+                let po3 = sbtr_f32_3(
+                    stone.positions[(j as usize)].position,
+                    single_planes_points_center,
+                );
+                let nrml_point_3 = dd_f32_3(
+                    find_points_normal(single_plane_point, po3),
+                    single_plane_point,
+                );
+
                 let dist = angular_difference(
                     angle_360_of(
                         double_plane_point,
@@ -292,10 +306,7 @@ pub fn find_indices_double_circle(
                     ),
                     angle_360_of(
                         single_plane_point,
-                        sbtr_f32_3(
-                            stone.positions[(j as usize)].position,
-                            single_planes_points_center,
-                        ),
+                        nrml_point_3,
                         reference_orthogonal,
                         planes_normal,
                     ),
