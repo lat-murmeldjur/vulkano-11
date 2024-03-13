@@ -373,6 +373,7 @@ pub fn find_indices_double_circle(
     }
 
     // debug
+    let mut debug = false;
 
     if points_of_single_plane + points_of_double_plane > triangle_counter {
         println!(
@@ -380,6 +381,8 @@ pub fn find_indices_double_circle(
             triangle_counter,
             points_of_single_plane + points_of_double_plane
         );
+
+        debug = true;
     }
     if points_of_single_plane + points_of_double_plane < triangle_counter {
         println!(
@@ -387,5 +390,21 @@ pub fn find_indices_double_circle(
             triangle_counter,
             points_of_single_plane + points_of_double_plane
         );
+
+        debug = true;
+    }
+
+    if debug {
+        println!("Further Info 1{:#?}", single_vertex_plane,);
+
+        println!("Further Info 2{:#?}", single_plane_point,);
+
+        println!("Further Info 3{:#?}", double_vertex_plane,);
+
+        println!("Further Info 4{:#?}", double_plane_point,);
+
+        println!("Further Info 5{:#?}", reference_orthogonal,);
+
+        println!("Further Info 6{:#?}", planes_normal,);
     }
 }
