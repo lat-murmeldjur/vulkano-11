@@ -95,6 +95,9 @@ use winit::{
     window::{Fullscreen, Window, WindowAttributes, WindowId},
 };
 
+use rand::rngs::ThreadRng;
+use rand::Rng;
+
 fn main() {
     let mut duration_since_epoch_nanos = record_nanos();
     // Statements here are executed when the compiled binary is called.
@@ -106,10 +109,11 @@ fn main() {
         duration_since_epoch_nanos.group_with_nothing()
     );
 
+    let mut rng = rand::thread_rng();
+
     let mut stone = petrify(magma(2, 10.0));
     let mut pebble = petrify(magma(2, 50.0));
     let mut anom = Anomaly { Ays: vec![] };
-    move_positions(&mut pebble.positions, [-230.0, 220.0, -230.0]);
 
     let ocl = oclock().cos();
 
@@ -221,12 +225,6 @@ fn main() {
     };
 
     let memory_allocator = Arc::new(StandardMemoryAllocator::new_default(device.clone()));
-
-    let (vertex_buffer, normals_buffer, index_buffer) =
-        load_buffers_short(stone, memory_allocator.clone());
-
-    let (vertex_buffer2, normals_buffer2, index_buffer2) =
-        load_buffers_short(pebble, memory_allocator.clone());
 
     let uniform_buffer = SubbufferAllocator::new(
         memory_allocator.clone(),
@@ -508,6 +506,23 @@ fn main() {
                     if turning_down {
                         rotate_vertical(&mut view_point, &mut center, &mut up_direction, -0.01);
                     }
+
+                    move_positions(&mut pebble.positions, [0.1, 0.1, 0.1]);
+
+                    move_positions(
+                        &mut stone.positions,
+                        [
+                            rng.gen_range(-0.6..0.6),
+                            rng.gen_range(-0.6..0.6),
+                            rng.gen_range(-0.6..0.6),
+                        ],
+                    );
+
+                    let (vertex_buffer, normals_buffer, index_buffer) =
+                        load_buffers_short(&mut stone, memory_allocator.clone());
+
+                    let (vertex_buffer2, normals_buffer2, index_buffer2) =
+                        load_buffers_short(&mut pebble, memory_allocator.clone());
 
                     let image_extent: [u32; 2] = window.inner_size().into();
 
@@ -836,7 +851,7 @@ fn window_size_dependent_setup(
 }
 
 fn load_buffers_short(
-    stone: Stone,
+    stone: &mut Stone,
     memory_allocator: Arc<StandardMemoryAllocator>,
     //) -> (u32, u32, u32) {
 ) -> (Subbuffer<[Position]>, Subbuffer<[Normal]>, Subbuffer<[u32]>) {
@@ -851,7 +866,7 @@ fn load_buffers_short(
                 | MemoryTypeFilter::HOST_SEQUENTIAL_WRITE,
             ..Default::default()
         },
-        stone.positions,
+        stone.positions.clone(),
     )
     .unwrap();
     let normals_buffer = Buffer::from_iter(
@@ -865,7 +880,7 @@ fn load_buffers_short(
                 | MemoryTypeFilter::HOST_SEQUENTIAL_WRITE,
             ..Default::default()
         },
-        stone.normals,
+        stone.normals.clone(),
     )
     .unwrap();
     let index_buffer = Buffer::from_iter(
@@ -879,7 +894,7 @@ fn load_buffers_short(
                 | MemoryTypeFilter::HOST_SEQUENTIAL_WRITE,
             ..Default::default()
         },
-        stone.indices,
+        stone.indices.clone(),
     )
     .unwrap();
 

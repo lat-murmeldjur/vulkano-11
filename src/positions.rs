@@ -11,7 +11,7 @@ pub struct Position {
     pub position: [f32; 3],
 }
 
-#[derive(BufferContents, Vertex, Debug)]
+#[derive(BufferContents, Vertex, Debug, Clone, Copy)]
 #[repr(C)]
 pub struct Normal {
     #[format(R32G32B32_SFLOAT)]
