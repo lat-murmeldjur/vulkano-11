@@ -1,5 +1,6 @@
 use rand::rngs::ThreadRng;
 use rand::Rng;
+use std::f32::consts::PI;
 use std::thread;
 use std::time::{Duration, SystemTime};
 use vulkano::{buffer::BufferContents, pipeline::graphics::vertex_input::Vertex};
@@ -7,7 +8,7 @@ use vulkano::{buffer::BufferContents, pipeline::graphics::vertex_input::Vertex};
 use crate::positions::{create_points_on_cross_section, sort_positions_by_angle, Normal, Position};
 
 use crate::f32_3::{
-    angle_360_of, angle_of, angular_difference, average_f32_2, dd_f32_3, dot_product, dstnc_f32_3,
+    angle_360_of, angle_of, angular_difference, average_f32_3, dd_f32_3, dot_product, dstnc_f32_3,
     find_points_normal, gen_f32_3, gen_f32_3_unit_on_point_normal_plane, gen_rthgnl_f32_3,
     mltply_f32_3, nrmlz_f32_3, sbtr_f32_3, vector_length,
 };
@@ -83,7 +84,7 @@ pub fn petrify(flow: Magma) -> Stone {
     let mut rng = rand::thread_rng();
     let points_diff = sbtr_f32_3(flow.positions[1].position, flow.positions[0].position);
     let planes_normal: [f32; 3] = nrmlz_f32_3(points_diff);
-    let planes_number = rng.gen_range(24..48);
+    let planes_number = rng.gen_range(32..64);
 
     let mut points_of_plane: u32 = 3;
     let reference_orthogonal = gen_rthgnl_f32_3(planes_normal, &mut rng);
@@ -97,12 +98,22 @@ pub fn petrify(flow: Magma) -> Stone {
 
     let mut previous_plane: [u32; 3] = [0, 0, 0]; // plane number, beginning position, ending position
 
-    let rotational_arguments_vector = vec![120.0, 0.0, 0.0, 0.0]; // f_const: f32,
-                                                                  // f_multiplier: f32,
-                                                                  // x_const: f32,
-                                                                  // x_multiplier: f32,
     for plane_point in planes_points.iter() {
-        println!("plane: {:#?}", plane_point);
+        // println!("plane: {:#?}", plane_point);
+        // vector_length(points_diff) / 2.0 * (PI * pln as f32 / planes_points.len() as f32).sin()
+
+        let d = (vector_length(points_diff) / 2.0)
+            * (pln as f32 - planes_points.len() as f32 / 2.0).abs()
+            / (planes_points.len() as f32 / 2.0);
+        let rotational_arguments_vector = vec![
+            ((vector_length(points_diff) / 2.0).powi(2) - d.powi(2)).sqrt(),
+            0.0,
+            0.0,
+            0.0,
+        ]; // f_const: f32,
+           // f_multiplier: f32,
+           // x_const: f32,
+           // x_multiplier: f32,
 
         let mut plane = Stone {
             positions: vec![],
@@ -140,16 +151,16 @@ pub fn petrify(flow: Magma) -> Stone {
             stone.indices.push(1);
             stone.indices.push(2);
         } else {
-            println!(
-                "############# {} {}",
-                previous_plane[1],
-                previous_plane[2] - 1
-            );
-            println!(
-                "############# {} {}",
-                previous_plane[2],
-                previous_plane[2] + points_of_plane - 1
-            );
+            //            println!(
+            //                "############# {} {}",
+            //                previous_plane[1],
+            //                previous_plane[2] - 1
+            //            );
+            //            println!(
+            //                "############# {} {}",
+            //                previous_plane[2],
+            //                previous_plane[2] + points_of_plane - 1
+            //            );
             find_indices_double_circle(
                 //vertex_plane_one: [u32; 2],
                 [previous_plane[1], previous_plane[2] - 1],
@@ -183,7 +194,7 @@ pub fn petrify(flow: Magma) -> Stone {
         if previous_plane[0] == planes_number - 2 {
             points_of_plane = 3;
         } else {
-            points_of_plane = rng.gen_range(8..32);
+            points_of_plane = rng.gen_range(32..256);
         };
     }
 
@@ -212,10 +223,8 @@ pub fn find_indices_double_circle(
     let mut index_single_saved = 0;
 
     let points_of_single_plane = single_vertex_plane[1] - single_vertex_plane[0] + 1;
-    println!("Single plane contained {} points", points_of_single_plane);
 
     let points_of_double_plane = double_vertex_plane[1] - double_vertex_plane[0] + 1;
-    println!("Double plane contains {} points", points_of_double_plane);
 
     let mut single_planes_points_average = [0.0, 0.0, 0.0];
     for i in single_vertex_plane[0]..=single_vertex_plane[1] {
@@ -248,14 +257,15 @@ pub fn find_indices_double_circle(
     let double_planes_points_center = sbtr_f32_3(double_planes_points_average, double_plane_point);
 
     let mut first_single_index = 0;
-    let mut first_double_index = 0;
+    let mut triangle_counter = 0;
+    let mut a_min = f32::MAX;
+    let mut a_min_dex = 0;
+    let mut k = 0;
 
     for i in double_vertex_plane[0]..=double_vertex_plane[1] + 1 {
-        // FULL CIRCLE MISSING
-        let mut triangle_counter = 0;
-        let mut a_min = f32::MAX;
-        let mut a_min_dex = 0;
-        let mut k = i + 1;
+        a_min = f32::MAX;
+        a_min_dex = 0;
+        k = i + 1;
         if k < double_vertex_plane[1] + 2 {
             if k > double_vertex_plane[1] {
                 k = double_vertex_plane[0];
@@ -285,7 +295,7 @@ pub fn find_indices_double_circle(
             // get an average of the two neighboring "normal" points
             // and find the closest angled "normal" point in the other circle compared to reference orthogonal
 
-            let average_point = average_f32_2(vec![nrml_point_1, nrml_point_2]);
+            let average_point = average_f32_3(vec![nrml_point_1, nrml_point_2]);
 
             for j in single_vertex_plane[0]..=single_vertex_plane[1] {
                 let po3 = sbtr_f32_3(
@@ -327,38 +337,55 @@ pub fn find_indices_double_circle(
         if index_set {
             let mut running_index = index_single_saved;
 
-            for l in 1..=modular_difference_in_range(
-                index_single_saved,
-                a_min_dex,
-                single_vertex_plane[0],
-                single_vertex_plane[1],
-            ) {
-                stone.indices.push(index_double_saved);
-                stone.indices.push(running_index);
-                stone.indices.push(modular_offset_in_range(
-                    running_index,
-                    1,
+            if index_single_saved != a_min_dex {
+                for l in 1..=modular_difference_in_range(
+                    index_single_saved,
+                    a_min_dex,
                     single_vertex_plane[0],
                     single_vertex_plane[1],
-                ));
+                ) {
+                    stone.indices.push(index_double_saved);
+                    stone.indices.push(running_index);
+                    stone.indices.push(modular_offset_in_range(
+                        running_index,
+                        1,
+                        single_vertex_plane[0],
+                        single_vertex_plane[1],
+                    ));
 
-                triangle_counter = triangle_counter + 1;
+                    triangle_counter = triangle_counter + 1;
 
-                running_index = modular_offset_in_range(
-                    running_index,
-                    1,
-                    single_vertex_plane[0],
-                    single_vertex_plane[1],
-                );
+                    running_index = modular_offset_in_range(
+                        running_index,
+                        1,
+                        single_vertex_plane[0],
+                        single_vertex_plane[1],
+                    );
+                }
             }
         } else {
             first_single_index = a_min_dex;
-            first_double_index = i;
         }
 
         index_set = true;
         index_double_saved = k;
         index_single_saved = a_min_dex;
-        println!("Added {} triangles", triangle_counter);
+    }
+
+    // debug
+
+    if points_of_single_plane + points_of_double_plane > triangle_counter {
+        println!(
+            "Added less triangles ({}) than necessary ({})",
+            triangle_counter,
+            points_of_single_plane + points_of_double_plane
+        );
+    }
+    if points_of_single_plane + points_of_double_plane < triangle_counter {
+        println!(
+            "Added *****more***** triangles ({}) than necessary ({})",
+            triangle_counter,
+            points_of_single_plane + points_of_double_plane
+        );
     }
 }
