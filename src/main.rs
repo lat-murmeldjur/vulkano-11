@@ -507,14 +507,23 @@ fn main() {
                         rotate_vertical(&mut view_point, &mut center, &mut up_direction, -0.01);
                     }
 
-                    move_positions(&mut pebble.positions, [0.1, 0.1, 0.1]);
+                    // simulation
+
+                    move_positions(
+                        &mut pebble.positions,
+                        [
+                            rng.gen_range(-100.6..100.6),
+                            rng.gen_range(-100.6..100.6),
+                            rng.gen_range(-100.6..100.6),
+                        ],
+                    );
 
                     move_positions(
                         &mut stone.positions,
                         [
-                            rng.gen_range(-0.6..0.6),
-                            rng.gen_range(-0.6..0.6),
-                            rng.gen_range(-0.6..0.6),
+                            rng.gen_range(-1.6..1.6),
+                            rng.gen_range(-1.6..1.6),
+                            rng.gen_range(-1.6..1.6),
                         ],
                     );
 
