@@ -604,6 +604,15 @@ fn main() {
                             proj: proj.into(),
                         };
 
+                        let rec = record_nanos();
+
+                        if (rec > duration_since_epoch_nanos + 1000000000) {
+                            println!("uniform 0 : {:#?}", uniform_data.world);
+                            println!("uniform 1 : {:#?}", uniform_data.view);
+                            println!("uniform 2 : {:#?}", uniform_data.proj);
+                            duration_since_epoch_nanos = rec;
+                        }
+
                         let subbuffer = uniform_buffer.allocate_sized().unwrap();
                         *subbuffer.write().unwrap() = uniform_data;
 
