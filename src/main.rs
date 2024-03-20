@@ -113,7 +113,11 @@ fn main() {
 
     let mut stone = petrify(magma(2, 10.0));
     let mut pebble = petrify(magma(2, 50.0));
-    let mut anom = Anomaly { Ays: vec![] };
+    let mut anom = Anomaly {
+        Anomaly: vec![],
+        Component: vec![],
+        Force: vec![],
+    };
 
     let ocl = oclock().cos();
 
