@@ -30,3 +30,9 @@ pub fn rotational_distance_function_sine(
 ) -> f32 {
     return c_arg[0] + c_arg[1] * (c_arg[2] + x * c_arg[3]).sin();
 }
+
+pub fn spherical_progress(points_diff: f32, pln: f32, planes_points: f32) -> f32 {
+    let d = (points_diff / 2.0) * (pln - planes_points / 2.0).abs() / (planes_points / 2.0);
+    let f = ((points_diff / 2.0).powi(2) - d.powi(2)).sqrt();
+    return f;
+}

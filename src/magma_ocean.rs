@@ -13,7 +13,7 @@ use crate::f32_3::{
     mltply_f32_3, nrmlz_f32_3, sbtr_f32_3, vector_length,
 };
 
-use crate::shapes::{f32_3_dots_collinear, rotational_distance_function_sine};
+use crate::shapes::{f32_3_dots_collinear, rotational_distance_function_sine, spherical_progress};
 
 use crate::u_modular::{
     modular_difference, modular_difference_in_range, modular_offset, modular_offset_in_range,
@@ -102,11 +102,12 @@ pub fn petrify(flow: Magma) -> Stone {
         // println!("plane: {:#?}", plane_point);
         // vector_length(points_diff) / 2.0 * (PI * pln as f32 / planes_points.len() as f32).sin()
 
-        let d = (vector_length(points_diff) / 2.0)
-            * (pln as f32 - planes_points.len() as f32 / 2.0).abs()
-            / (planes_points.len() as f32 / 2.0);
         let rotational_arguments_vector = vec![
-            ((vector_length(points_diff) / 2.0).powi(2) - d.powi(2)).sqrt(),
+            spherical_progress(
+                vector_length(points_diff),
+                pln as f32,
+                planes_number as f32 - 1.0,
+            ),
             0.0,
             0.0,
             0.0,
@@ -130,6 +131,8 @@ pub fn petrify(flow: Magma) -> Stone {
             points_of_plane, //points_number
             &mut rng,
         );
+
+        points_of_plane = plane.positions.len() as u32;
 
         sort_positions_by_angle(
             *plane_point,
@@ -261,6 +264,7 @@ pub fn find_indices_double_circle(
     let mut a_min = f32::MAX;
     let mut a_min_dex = 0;
     let mut k = 0;
+    let mut pointlike = false;
 
     for i in double_vertex_plane[0]..=double_vertex_plane[1] + 1 {
         a_min = f32::MAX;
@@ -270,7 +274,6 @@ pub fn find_indices_double_circle(
             if k > double_vertex_plane[1] {
                 k = double_vertex_plane[0];
             }
-
             // take the points,
             // get their vector from the circle's average point
             // translate this distance to the plane point on the interplane-axis ("normal" points)
@@ -321,6 +324,7 @@ pub fn find_indices_double_circle(
                         planes_normal,
                     ),
                 );
+
                 if dist < a_min {
                     a_min = dist;
                     a_min_dex = j;
@@ -332,36 +336,43 @@ pub fn find_indices_double_circle(
             triangle_counter = triangle_counter + 1;
         } else {
             a_min_dex = first_single_index;
+            if a_min_dex == index_single_saved && triangle_counter == points_of_double_plane {
+                pointlike = true;
+            }
         }
 
         if index_set {
             let mut running_index = index_single_saved;
 
-            if index_single_saved != a_min_dex {
-                for l in 1..=modular_difference_in_range(
-                    index_single_saved,
-                    a_min_dex,
+            let mut loop_for = modular_difference_in_range(
+                index_single_saved,
+                a_min_dex,
+                single_vertex_plane[0],
+                single_vertex_plane[1],
+            );
+
+            if pointlike {
+                loop_for = single_vertex_plane[1] - single_vertex_plane[0] + 1;
+            }
+
+            for l in 1..=loop_for {
+                stone.indices.push(index_double_saved);
+                stone.indices.push(running_index);
+                stone.indices.push(modular_offset_in_range(
+                    running_index,
+                    1,
                     single_vertex_plane[0],
                     single_vertex_plane[1],
-                ) {
-                    stone.indices.push(index_double_saved);
-                    stone.indices.push(running_index);
-                    stone.indices.push(modular_offset_in_range(
-                        running_index,
-                        1,
-                        single_vertex_plane[0],
-                        single_vertex_plane[1],
-                    ));
+                ));
 
-                    triangle_counter = triangle_counter + 1;
+                triangle_counter = triangle_counter + 1;
 
-                    running_index = modular_offset_in_range(
-                        running_index,
-                        1,
-                        single_vertex_plane[0],
-                        single_vertex_plane[1],
-                    );
-                }
+                running_index = modular_offset_in_range(
+                    running_index,
+                    1,
+                    single_vertex_plane[0],
+                    single_vertex_plane[1],
+                );
             }
         } else {
             first_single_index = a_min_dex;
@@ -397,14 +408,6 @@ pub fn find_indices_double_circle(
     if debug {
         println!("Further Info 1{:#?}", single_vertex_plane,);
 
-        println!("Further Info 2{:#?}", single_plane_point,);
-
-        println!("Further Info 3{:#?}", double_vertex_plane,);
-
-        println!("Further Info 4{:#?}", double_plane_point,);
-
-        println!("Further Info 5{:#?}", reference_orthogonal,);
-
-        println!("Further Info 6{:#?}", planes_normal,);
+        println!("Further Info 2{:#?}", double_vertex_plane,);
     }
 }

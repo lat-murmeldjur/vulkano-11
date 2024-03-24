@@ -298,7 +298,7 @@ fn main() {
     //\\\|||///
     //\\\|||///\\\|||///\\\|||///\\\|||///\\\|||///[ the end of setup ]\\\|||///\\\|||///\\\|||///\\\|||///\\\|||///\\\|||///
 
-    let mut rot_static = false;
+    let mut rot_static = true;
 
     let mut view_point = Position {
         position: [0.0, -1.0, 1.0],
@@ -513,23 +513,9 @@ fn main() {
 
                     // simulation
 
-                    move_positions(
-                        &mut pebble.positions,
-                        [
-                            rng.gen_range(-100.6..100.6),
-                            rng.gen_range(-100.6..100.6),
-                            rng.gen_range(-100.6..100.6),
-                        ],
-                    );
+                    move_positions(&mut pebble.positions, [0.0, 0.0, 0.0]);
 
-                    move_positions(
-                        &mut stone.positions,
-                        [
-                            rng.gen_range(-1.6..1.6),
-                            rng.gen_range(-1.6..1.6),
-                            rng.gen_range(-1.6..1.6),
-                        ],
-                    );
+                    move_positions(&mut stone.positions, [0.0, 0.0, 0.0]);
 
                     let (vertex_buffer, normals_buffer, index_buffer) =
                         load_buffers_short(&mut stone, memory_allocator.clone());
@@ -607,15 +593,6 @@ fn main() {
                             view: (view * scale).into(),
                             proj: proj.into(),
                         };
-
-                        let rec = record_nanos();
-
-                        if (rec > duration_since_epoch_nanos + 1000000000) {
-                            println!("uniform 0 : {:#?}", uniform_data.world);
-                            println!("uniform 1 : {:#?}", uniform_data.view);
-                            println!("uniform 2 : {:#?}", uniform_data.proj);
-                            duration_since_epoch_nanos = rec;
-                        }
 
                         let subbuffer = uniform_buffer.allocate_sized().unwrap();
                         *subbuffer.write().unwrap() = uniform_data;
