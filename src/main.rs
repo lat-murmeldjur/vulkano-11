@@ -127,10 +127,10 @@ fn main() {
         Force: vec![],
     };
 
-    let k = 8;
+    let k = 35;
 
-    for i in 0..k {
-        add_particle_by(&mut anom, e(gen_f32_3(0.0, 69.0, &mut rng), true));
+    for _ in 0..k {
+        add_particle_by(&mut anom, e(gen_f32_3(0.0, 169.0, &mut rng), true));
         add_particle_by(
             &mut anom,
             q(
@@ -541,7 +541,7 @@ fn main() {
                     //
                     // move_positions(&mut stone.positions, [0.0, 0.0, 0.0]);
 
-                    let get = view(&anom);
+                    let get = view(&mut anom);
 
                     let mut bvs: Vec<bv> = vec![];
 

@@ -1,5 +1,7 @@
 // experimental generic composite reductive approximation outline
+use std::sync::mpsc;
 use std::thread;
+use std::thread::JoinHandle;
 
 use crate::magma_ocean::{magma, petrify, Stone};
 use crate::positions::{move_positions, Normal, Position};
@@ -58,14 +60,28 @@ pub fn particle(position: [f32; 3], properties: Vec<Property>) -> Anomaly {
     anom
 }
 
-pub fn view(anom: &Anomaly) -> Vec<Stone> {
+pub fn view(anom: &mut Anomaly) -> Vec<Stone> {
     let mut ret: Vec<Stone> = vec![];
-    for a in &anom.Anomaly {
-        ret.append(&mut view(&a));
-    }
+    let mut rs: Vec<mpsc::Receiver<Vec<Stone>>> = vec![];
+
+    let handl = thread::scope(|s| {
+        for mut a in anom.Anomaly.iter_mut() {
+            let (tx, rx) = mpsc::channel();
+            rs.push(rx);
+            s.spawn(move || {
+                let k = view(&mut a);
+                tx.send(k).unwrap();
+            });
+        }
+    });
 
     for c in &anom.Component {
         ret.append(&mut component_view(&c));
+    }
+
+    for r in rs {
+        let mut rec = r.recv().unwrap();
+        ret.append(&mut rec);
     }
 
     ret
