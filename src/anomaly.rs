@@ -1,6 +1,9 @@
 // experimental generic composite reductive approximation outline
 use std::thread;
 
+use crate::magma_ocean::{magma, petrify, Stone};
+use crate::positions::{move_positions, Normal, Position};
+
 pub struct Anomaly {
     pub Anomaly: Vec<Anomaly>,
     pub Component: Vec<Component>,
@@ -18,6 +21,7 @@ pub struct Component {
     pub Property: Vec<Property>,
 }
 
+#[derive(Clone)]
 pub struct Property {
     pub Name: f64,
     pub Value: f64,
@@ -29,11 +33,13 @@ pub struct Force {
     pub Domain: Vec<Component>,
 }
 
-static EC: f64 = 313.0;
-static Sp: f64 = 591.0;
-static Ms: f64 = 343.0;
-static Cr: f64 = 0.10;
-static QMs: [f64; 6] = [2.2, 4.7, 1.28, 96.0, 173.1, 4.18];
+pub fn add_particle(anom: &mut Anomaly, position: [f32; 3], properties: Vec<Property>) {
+    anom.Anomaly.push(particle(position, properties));
+}
+
+pub fn add_particle_by(anom: &mut Anomaly, p: Anomaly) {
+    anom.Anomaly.push(p);
+}
 
 pub fn particle(position: [f32; 3], properties: Vec<Property>) -> Anomaly {
     let mut anom = Anomaly {
@@ -52,7 +58,60 @@ pub fn particle(position: [f32; 3], properties: Vec<Property>) -> Anomaly {
     anom
 }
 
-pub fn e(position: [f32; 3], clock: bool) {
+pub fn view(anom: &Anomaly) -> Vec<Stone> {
+    let mut ret: Vec<Stone> = vec![];
+    for a in &anom.Anomaly {
+        ret.append(&mut view(&a));
+    }
+
+    for c in &anom.Component {
+        ret.append(&mut component_view(&c));
+    }
+
+    ret
+}
+
+pub fn component_view(component: &Component) -> Vec<Stone> {
+    let mut ret: Vec<Stone> = vec![];
+
+    for c in &component.Component {
+        ret.append(&mut component_view(&c));
+    }
+
+    let size: Vec<Property> = component
+        .Property
+        .clone()
+        .into_iter()
+        .filter(|c| c.Name == Ms)
+        .collect();
+
+    for c in &component.Composition {
+        for d in &c.Distribution {
+            for v in &d(c.Space.clone()) {
+                let mut s = petrify(magma(2, size[0].Value as f32));
+                move_positions(&mut s.positions, *v);
+                ret.push(s);
+            }
+        }
+    }
+    ret
+}
+
+//
+
+//
+
+//
+
+// future ref example
+
+static EC: f64 = 313.0;
+static Sp: f64 = 591.0;
+static Ms: f64 = 343.0;
+static Cr: f64 = 0.10;
+static QMs: [f64; 6] = [2.2, 4.7, 1.28, 96.0, 173.1, 4.18];
+
+pub fn e(position: [f32; 3], clock: bool) -> Anomaly {
     let sp = if clock { 0.5 } else { -0.5 };
     particle(
         position,
@@ -70,7 +129,7 @@ pub fn e(position: [f32; 3], clock: bool) {
                 Value: 0.511,
             },
         ],
-    );
+    )
 }
 
 pub fn q(position: [f32; 3], clock: bool, charge: bool, color: u8, flavor: u8) {

@@ -15,6 +15,8 @@ use display_mods::{
 };
 
 mod f32_3;
+use f32_3::gen_f32_3;
+
 mod positions;
 use positions::{move_positions, Normal, Position};
 
@@ -25,7 +27,7 @@ mod magma_ocean;
 use magma_ocean::{magma, petrify, Stone};
 
 mod anomaly;
-use anomaly::Anomaly;
+use anomaly::{add_particle_by, e, view, Anomaly};
 
 mod moving_around;
 use moving_around::{
@@ -98,6 +100,12 @@ use winit::{
 use rand::rngs::ThreadRng;
 use rand::Rng;
 
+pub struct bv {
+    pub v: Subbuffer<[Position]>,
+    pub n: Subbuffer<[Normal]>,
+    pub i: Subbuffer<[u32]>,
+}
+
 fn main() {
     let mut duration_since_epoch_nanos = record_nanos();
     // Statements here are executed when the compiled binary is called.
@@ -111,13 +119,19 @@ fn main() {
 
     let mut rng = rand::thread_rng();
 
-    let mut stone = petrify(magma(2, 10.0));
-    let mut pebble = petrify(magma(2, 50.0));
+    // let mut stone = petrify(magma(2, 10.0));
+    // let mut pebble = petrify(magma(2, 50.0));
     let mut anom = Anomaly {
         Anomaly: vec![],
         Component: vec![],
         Force: vec![],
     };
+
+    let k = 12;
+
+    for i in 0..k {
+        add_particle_by(&mut anom, e(gen_f32_3(0.0, 69.0, &mut rng), true));
+    }
 
     let ocl = oclock().cos();
 
@@ -513,15 +527,29 @@ fn main() {
 
                     // simulation
 
-                    move_positions(&mut pebble.positions, [0.0, 0.0, 0.0]);
+                    // move_positions(&mut pebble.positions, [0.0, 0.0, 0.0]);
+                    //
+                    // move_positions(&mut stone.positions, [0.0, 0.0, 0.0]);
 
-                    move_positions(&mut stone.positions, [0.0, 0.0, 0.0]);
+                    let get = view(&anom);
 
-                    let (vertex_buffer, normals_buffer, index_buffer) =
-                        load_buffers_short(&mut stone, memory_allocator.clone());
+                    let mut bvs: Vec<bv> = vec![];
 
-                    let (vertex_buffer2, normals_buffer2, index_buffer2) =
-                        load_buffers_short(&mut pebble, memory_allocator.clone());
+                    for mut g in get {
+                        let (vertex_buffer, normals_buffer, index_buffer) =
+                            load_buffers_short(&mut g, memory_allocator.clone());
+                        bvs.push(bv {
+                            v: vertex_buffer,
+                            n: normals_buffer,
+                            i: index_buffer,
+                        });
+                    }
+
+                    //               let (vertex_buffer, normals_buffer, index_buffer) =
+                    //                   load_buffers_short(&mut stone, memory_allocator.clone());
+                    //
+                    //               let (vertex_buffer2, normals_buffer2, index_buffer2) =
+                    //                   load_buffers_short(&mut pebble, memory_allocator.clone());
 
                     let image_extent: [u32; 2] = window.inner_size().into();
 
@@ -670,42 +698,26 @@ fn main() {
                                 0,
                                 set,
                             )
-                            .unwrap()
-                            .begin_query(
-                                query_pool.clone(),
-                                0,
-                                QueryControlFlags::empty(),
-                                // QueryControlFlags::PRECISE,
-                            )
-                            .unwrap()
-                            .bind_vertex_buffers(0, (vertex_buffer.clone(), normals_buffer.clone()))
-                            .unwrap()
-                            .bind_index_buffer(index_buffer.clone())
-                            .unwrap()
-                            .draw_indexed(index_buffer.len() as u32 as u32, 1, 0, 0, 0)
-                            .unwrap()
-                            .end_query(query_pool.clone(), 0)
                             .unwrap();
 
-                        builder
-                            .begin_query(
-                                query_pool.clone(),
-                                0,
-                                QueryControlFlags::empty(),
-                                // QueryControlFlags::PRECISE,
-                            )
-                            .unwrap()
-                            .bind_vertex_buffers(
-                                0,
-                                (vertex_buffer2.clone(), normals_buffer2.clone()),
-                            )
-                            .unwrap()
-                            .bind_index_buffer(index_buffer2.clone())
-                            .unwrap()
-                            .draw_indexed(index_buffer2.len() as u32 as u32, 1, 0, 0, 0)
-                            .unwrap()
-                            .end_query(query_pool.clone(), 0)
-                            .unwrap();
+                        for x in bvs {
+                            builder
+                                .begin_query(
+                                    query_pool.clone(),
+                                    0,
+                                    QueryControlFlags::empty(),
+                                    // QueryControlFlags::PRECISE,
+                                )
+                                .unwrap()
+                                .bind_vertex_buffers(0, (x.v.clone(), x.n.clone()))
+                                .unwrap()
+                                .bind_index_buffer(x.i.clone())
+                                .unwrap()
+                                .draw_indexed(x.i.len() as u32 as u32, 1, 0, 0, 0)
+                                .unwrap()
+                                .end_query(query_pool.clone(), 0)
+                                .unwrap();
+                        }
                     }
 
                     builder.end_render_pass(Default::default()).unwrap();
