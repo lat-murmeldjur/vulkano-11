@@ -132,7 +132,7 @@ pub fn e(position: [f32; 3], clock: bool) -> Anomaly {
     )
 }
 
-pub fn q(position: [f32; 3], clock: bool, charge: bool, color: u8, flavor: u8) {
+pub fn q(position: [f32; 3], clock: bool, charge: bool, color: u8, flavor: u8) -> Anomaly {
     let sp = if clock { 0.5 } else { -0.5 };
     let ch = if charge { 2.0 / 3.0 } else { -1.0 / 3.0 };
 
@@ -156,7 +156,7 @@ pub fn q(position: [f32; 3], clock: bool, charge: bool, color: u8, flavor: u8) {
                 Value: (color % 6) as f64,
             },
         ],
-    );
+    )
 }
 
 pub fn particular(coordinates: Vec<[f32; 3]>) -> Vec<[f32; 3]> {

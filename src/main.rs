@@ -27,7 +27,7 @@ mod magma_ocean;
 use magma_ocean::{magma, petrify, Stone};
 
 mod anomaly;
-use anomaly::{add_particle_by, e, view, Anomaly};
+use anomaly::{add_particle_by, e, q, view, Anomaly};
 
 mod moving_around;
 use moving_around::{
@@ -127,10 +127,20 @@ fn main() {
         Force: vec![],
     };
 
-    let k = 12;
+    let k = 8;
 
     for i in 0..k {
         add_particle_by(&mut anom, e(gen_f32_3(0.0, 69.0, &mut rng), true));
+        add_particle_by(
+            &mut anom,
+            q(
+                gen_f32_3(0.0, 69.0, &mut rng),
+                true,
+                true,
+                rng.gen_range(0..3),
+                rng.gen_range(0..1),
+            ),
+        );
     }
 
     let ocl = oclock().cos();
