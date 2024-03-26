@@ -17,6 +17,9 @@ use display_mods::{
 mod f32_3;
 use f32_3::gen_f32_3;
 
+mod f64_3;
+use f64_3::{gen_f64_3, mltply_f64_3, nrmlz_f64_3};
+
 mod positions;
 use positions::{move_positions, Normal, Position};
 
@@ -27,7 +30,7 @@ mod magma_ocean;
 use magma_ocean::{magma, petrify, Stone};
 
 mod anomaly;
-use anomaly::{add_particle_by, e, q, view, Anomaly};
+use anomaly::{add_particle_by, e, ls_f64, progress, q, ts_f64, view, Anomaly};
 
 mod moving_around;
 use moving_around::{
@@ -127,14 +130,22 @@ fn main() {
         Force: vec![],
     };
 
-    let k = 35;
+    let k = 8;
 
     for _ in 0..k {
-        add_particle_by(&mut anom, e(gen_f32_3(0.0, 169.0, &mut rng), true));
+        add_particle_by(
+            &mut anom,
+            e(
+                gen_f32_3(0.0, 69.0, &mut rng),
+                mltply_f64_3(nrmlz_f64_3(gen_f64_3(0.0, 10.0, &mut rng)), ls_f64),
+                true,
+            ),
+        );
         add_particle_by(
             &mut anom,
             q(
                 gen_f32_3(0.0, 69.0, &mut rng),
+                mltply_f64_3(nrmlz_f64_3(gen_f64_3(0.0, 10.0, &mut rng)), ls_f64),
                 true,
                 true,
                 rng.gen_range(0..3),
@@ -541,6 +552,7 @@ fn main() {
                     //
                     // move_positions(&mut stone.positions, [0.0, 0.0, 0.0]);
 
+                    progress(&mut anom, ts_f64);
                     let get = view(&mut anom);
 
                     let mut bvs: Vec<bv> = vec![];
