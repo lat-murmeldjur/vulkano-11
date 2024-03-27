@@ -28,7 +28,6 @@ pub struct Component {
     pub Property: Vec<Property>,
 }
 
-#[derive(Clone)]
 pub struct Property {
     pub Name: f64,
     pub Value: f64,
@@ -38,6 +37,31 @@ pub struct Force {
     pub Force: Vec<Force>,
     pub Range: Vec<f64>,
     pub Domain: Vec<Component>,
+}
+
+pub fn interact(anom: &mut Anomaly) {
+    thread::scope(|s| {
+        let mut handles: Vec<thread::ScopedJoinHandle<()>> = vec![];
+        for mut a in anom.Anomaly.iter_mut() {
+            let handle = s.spawn(move || interact(&mut a));
+            handles.push(handle);
+        }
+        for h in handles {
+            h.join().unwrap();
+        }
+    });
+
+    component_interact(anom);
+}
+
+pub fn component_interact(anom: &mut Anomaly) {
+    for f in &anom.Force {
+        //        for mut a in anom.Anomaly.iter_mut() {
+        //            for mut b in anom.Anomaly.iter_mut() {
+        //                println!("0");
+        //            }
+        //        }
+    }
 }
 
 pub fn progress(anom: &mut Anomaly, time: f64) {
@@ -57,7 +81,9 @@ pub fn progress(anom: &mut Anomaly, time: f64) {
         thread::scope(|s| {
             let mut handles: Vec<thread::ScopedJoinHandle<()>> = vec![];
             for mut c in anom.Component.iter_mut() {
-                let handle = s.spawn(move || component_progress(&mut c, ts_f64));
+                let handle = s.spawn(move || {
+                    component_progress(&mut c, ts_f64);
+                });
                 handles.push(handle);
             }
             for h in handles {
@@ -67,15 +93,14 @@ pub fn progress(anom: &mut Anomaly, time: f64) {
     }
 }
 
-pub fn component_property(component: &Component, name: f64) -> Property {
-    let prop: Vec<Property> = component
+pub fn component_property(component: &mut Component, name: f64) -> f64 {
+    let prop: Vec<&mut Property> = component
         .Property
-        .clone()
-        .into_iter()
+        .iter_mut()
         .filter(|c| c.Name == name)
         .collect();
 
-    return prop[0].clone();
+    return prop[0].Value;
 }
 
 pub fn component_progress(component: &mut Component, time: f64) {
@@ -83,9 +108,9 @@ pub fn component_progress(component: &mut Component, time: f64) {
         component_progress(&mut c, time);
     }
 
-    let inertia_0 = component_property(component, In0).Value;
-    let inertia_1 = component_property(component, In1).Value;
-    let inertia_2 = component_property(component, In2).Value;
+    let inertia_0 = component_property(component, In0);
+    let inertia_1 = component_property(component, In1);
+    let inertia_2 = component_property(component, In2);
 
     for c in &mut component.Composition {
         for mut s in c.Space.iter_mut() {
@@ -110,8 +135,8 @@ pub fn view(anom: &mut Anomaly) -> Vec<Stone> {
         }
     });
 
-    for c in &anom.Component {
-        ret.append(&mut component_view(&c));
+    for c in anom.Component.iter_mut() {
+        ret.append(&mut component_view(c));
     }
 
     for r in rs {
@@ -122,11 +147,11 @@ pub fn view(anom: &mut Anomaly) -> Vec<Stone> {
     ret
 }
 
-pub fn component_view(component: &Component) -> Vec<Stone> {
+pub fn component_view(component: &mut Component) -> Vec<Stone> {
     let mut ret: Vec<Stone> = vec![];
 
-    for c in &component.Component {
-        ret.append(&mut component_view(&c));
+    for c in component.Component.iter_mut() {
+        ret.append(&mut component_view(c));
     }
 
     let size = component_property(component, Ms);
@@ -134,7 +159,7 @@ pub fn component_view(component: &Component) -> Vec<Stone> {
     for c in &component.Composition {
         for d in &c.Distribution {
             for v in &d(c.Space.clone()) {
-                let mut s = petrify(magma(2, size.Value as f32));
+                let mut s = petrify(magma(2, size as f32));
                 move_positions(&mut s.positions, *v);
                 ret.push(s);
             }
