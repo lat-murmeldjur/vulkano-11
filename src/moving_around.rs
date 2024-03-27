@@ -50,36 +50,6 @@ pub fn move_elevation(
     center.position = dd_f32_3(center.position, direction);
 }
 
-pub fn move_in_x(
-    view_point: &mut Position,
-    center: &mut Position,
-    _up_direction: &mut Position,
-    rate: f32,
-) {
-    view_point.position[0] = view_point.position[0] + rate;
-    center.position[0] = center.position[0] + rate;
-}
-
-pub fn move_in_y(
-    view_point: &mut Position,
-    center: &mut Position,
-    _up_direction: &mut Position,
-    rate: f32,
-) {
-    view_point.position[1] = view_point.position[1] + rate;
-    center.position[1] = center.position[1] + rate;
-}
-
-pub fn move_in_z(
-    view_point: &mut Position,
-    center: &mut Position,
-    _up_direction: &mut Position,
-    rate: f32,
-) {
-    view_point.position[2] = view_point.position[2] + rate;
-    center.position[2] = center.position[2] + rate;
-}
-
 pub fn rotate_up(
     view_point: &mut Position,
     center: &mut Position,

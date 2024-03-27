@@ -95,29 +95,6 @@ pub fn dot_product(a: [f32; 3], b: [f32; 3]) -> f32 {
     return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 }
 
-pub fn angle_of(c: [f32; 3], x: [f32; 3], r: [f32; 3]) -> f32 {
-    // angle of point x compared to center and common random comparison vector
-    let vector = find_points_normal(x, c);
-    let vl = vector_length(vector);
-
-    if vl == 0.0 {
-        return 0.0;
-    }
-
-    let mut angle_of = dot_product(vector, r) / (vl * vector_length(r));
-
-    if angle_of > 1.0 {
-        angle_of = 1.0;
-    }
-
-    if angle_of < -1.0 {
-        angle_of = -1.0;
-    }
-
-    let angle = angle_of.acos();
-    return angle;
-}
-
 pub fn angle_360_of(c: [f32; 3], x: [f32; 3], r: [f32; 3], norm: [f32; 3]) -> f32 {
     let diff = sbtr_f32_3(c, x);
     if vector_length(diff) == 0.0 {

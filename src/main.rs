@@ -6,10 +6,10 @@
 // at your option. All files in the project carrying such
 // notice may not be copied, modified, or distributed except
 // according to those terms.
-#![allow(warnings)] // not today, erosion
+//#![allow(warnings)] // not today, erosion
 
 mod display_mods;
-use display_mods::{display_time_elapsed_nice, oclock, record_nanos, Groupable};
+use display_mods::{oclock, record_nanos, Groupable};
 
 mod f32_3;
 use f32_3::gen_f32_3;
@@ -27,7 +27,7 @@ mod magma_ocean;
 use magma_ocean::Stone;
 
 mod anomaly;
-use anomaly::{add_particle_by, e, ls_f64, progress, q, ts_f64, view, Anomaly};
+use anomaly::{add_particle_by, e, progress, q, view, Anomaly, LS_F64, TS_F64};
 
 mod moving_around;
 use moving_around::{
@@ -100,7 +100,7 @@ pub struct Bv {
 }
 
 fn main() {
-    let mut duration_since_epoch_nanos = record_nanos();
+    let duration_since_epoch_nanos = record_nanos();
     // Statements here are executed when the compiled binary is called.
 
     // let warning_test = "unused"; // results in CI warning
@@ -115,9 +115,9 @@ fn main() {
     // let mut stone = petrify(magma(2, 10.0));
     // let mut pebble = petrify(magma(2, 50.0));
     let mut anom = Anomaly {
-        Anomaly: vec![],
-        Component: vec![],
-        Force: vec![],
+        anomaly: vec![],
+        component: vec![],
+        force: vec![],
     };
 
     let k = 8;
@@ -127,7 +127,7 @@ fn main() {
             &mut anom,
             e(
                 gen_f32_3(0.0, 69.0, &mut rng),
-                mltply_f64_3(nrmlz_f64_3(gen_f64_3(0.0, 10.0, &mut rng)), ls_f64),
+                mltply_f64_3(nrmlz_f64_3(gen_f64_3(0.0, 10.0, &mut rng)), LS_F64),
                 true,
             ),
         );
@@ -135,7 +135,7 @@ fn main() {
             &mut anom,
             q(
                 gen_f32_3(0.0, 69.0, &mut rng),
-                mltply_f64_3(nrmlz_f64_3(gen_f64_3(0.0, 10.0, &mut rng)), ls_f64),
+                mltply_f64_3(nrmlz_f64_3(gen_f64_3(0.0, 10.0, &mut rng)), LS_F64),
                 true,
                 true,
                 rng.gen_range(0..3),
@@ -146,10 +146,10 @@ fn main() {
 
     let ocl = oclock().cos();
 
-    ///|||\\\///|||\\\///|||\\\///|||\\\///|||\\\///|||\\\[ Main ]///|||\\\///|||\\\///|||\\\///|||\\\///|||\\\///|||\\\
-    ///|||\\\
-    ///|||\\\
-    ///|||\\\
+    //|||\\\///|||\\\///|||\\\///|||\\\///|||\\\///|||\\\[ Main ]///|||\\\///|||\\\///|||\\\///|||\\\///|||\\\///|||\\\
+    //|||\\\
+    //|||\\\
+    //|||\\\
     let event_loop = EventLoop::new().unwrap();
 
     let library = VulkanLibrary::new().unwrap();
@@ -350,8 +350,6 @@ fn main() {
     let mut turning_up = false;
     let mut turning_down = false;
 
-    duration_since_epoch_nanos = display_time_elapsed_nice(duration_since_epoch_nanos);
-
     let _modifiers = ModifiersState::default();
 
     // Create a query pool for occlusion queries, with 3 slots.
@@ -545,7 +543,7 @@ fn main() {
                     //
                     // move_positions(&mut stone.positions, [0.0, 0.0, 0.0]);
 
-                    progress(&mut anom, ts_f64);
+                    progress(&mut anom, TS_F64);
                     let get = view(&mut anom);
 
                     let mut bvs: Vec<Bv> = vec![];

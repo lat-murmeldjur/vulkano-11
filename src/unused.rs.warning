@@ -1,0 +1,42 @@
+pub fn angle_of(c: [f32; 3], x: [f32; 3], r: [f32; 3]) -> f32 {
+    // angle of point x compared to center and common random comparison vector
+    let vector = find_points_normal(x, c);
+    let vl = vector_length(vector);
+
+    if vl == 0.0 {
+        return 0.0;
+    }
+
+    let mut angle_of = dot_product(vector, r) / (vl * vector_length(r));
+
+    if angle_of > 1.0 {
+        angle_of = 1.0;
+    }
+
+    if angle_of < -1.0 {
+        angle_of = -1.0;
+    }
+
+    let angle = angle_of.acos();
+    return angle;
+}
+
+pub fn add_particle(anom: &mut Anomaly, position: [f32; 3], properties: Vec<Property>) {
+    anom.anomaly.push(particle(position, properties));
+}
+
+pub fn wait_for_a_minute() {
+    let tsn3 = Duration::from_secs(60);
+    // Print text to the console.
+    thread::sleep(tsn3);
+}
+
+pub fn display_time_elapsed_nice(recorded_start: u128) -> u128 {
+    let current_time = record_nanos();
+
+    println!(
+        "Nanoseconds elapsed since last timestamp: {}",
+        (current_time - recorded_start).group_with_nothing()
+    ); // this is great
+    return current_time;
+}

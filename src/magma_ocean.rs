@@ -1,22 +1,16 @@
 use rand::Rng;
-use std::thread;
-use std::time::Duration;
-
-use crate::positions::{create_points_on_cross_section, sort_positions_by_angle, Normal, Position};
 
 use crate::f32_3::{
     angle_360_of, angular_difference, average_f32_3, dd_f32_3, find_points_normal, gen_f32_3,
     gen_rthgnl_f32_3, mltply_f32_3, nrmlz_f32_3, sbtr_f32_3, vector_length,
 };
-
+use crate::positions::{create_points_on_cross_section, sort_positions_by_angle, Normal, Position};
 use crate::shapes::{f32_3_dots_collinear, rotational_distance_function_sine, spherical_progress};
-
 use crate::u_modular::{modular_difference_in_range, modular_offset_in_range};
 
 #[derive(Debug)]
 pub struct Magma {
     positions: Vec<Position>,
-    normals: Vec<Normal>,
     indices: Vec<u32>,
 }
 
@@ -27,18 +21,11 @@ pub struct Stone {
     pub indices: Vec<u32>,
 }
 
-pub fn wait_for_a_minute() {
-    let tsn3 = Duration::from_secs(60);
-    // Print text to the console.
-    thread::sleep(tsn3);
-}
-
 pub fn magma(flow: u32, scale: f32) -> Magma {
     let mut rng = rand::thread_rng();
 
     let mut lava_flow = Magma {
         positions: vec![],
-        normals: vec![],
         indices: vec![],
     };
 
@@ -267,9 +254,9 @@ pub fn find_indices_double_circle(
 
     let mut first_single_index = 0;
     let mut triangle_counter = 0;
-    let mut a_min = f32::MAX;
-    let mut a_min_dex = 0;
-    let mut k = 0;
+    let mut a_min;
+    let mut a_min_dex;
+    let mut k;
     let mut pointlike = false;
 
     for i in double_vertex_plane[0]..=double_vertex_plane[1] + 1 {
