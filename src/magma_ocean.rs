@@ -1,23 +1,17 @@
-use rand::rngs::ThreadRng;
 use rand::Rng;
-use std::f32::consts::PI;
 use std::thread;
-use std::time::{Duration, SystemTime};
-use vulkano::{buffer::BufferContents, pipeline::graphics::vertex_input::Vertex};
+use std::time::Duration;
 
 use crate::positions::{create_points_on_cross_section, sort_positions_by_angle, Normal, Position};
 
 use crate::f32_3::{
-    angle_360_of, angle_of, angular_difference, average_f32_3, dd_f32_3, dot_product, dstnc_f32_3,
-    find_points_normal, gen_f32_3, gen_f32_3_unit_on_point_normal_plane, gen_rthgnl_f32_3,
-    mltply_f32_3, nrmlz_f32_3, sbtr_f32_3, vector_length,
+    angle_360_of, angular_difference, average_f32_3, dd_f32_3, find_points_normal, gen_f32_3,
+    gen_rthgnl_f32_3, mltply_f32_3, nrmlz_f32_3, sbtr_f32_3, vector_length,
 };
 
 use crate::shapes::{f32_3_dots_collinear, rotational_distance_function_sine, spherical_progress};
 
-use crate::u_modular::{
-    modular_difference, modular_difference_in_range, modular_offset, modular_offset_in_range,
-};
+use crate::u_modular::{modular_difference_in_range, modular_offset_in_range};
 
 #[derive(Debug)]
 pub struct Magma {
@@ -48,7 +42,7 @@ pub fn magma(flow: u32, scale: f32) -> Magma {
         indices: vec![],
     };
 
-    let mut base = scale;
+    let base = scale;
     let mut cbase = -2.5 * scale;
     for i in 1..=flow {
         lava_flow.positions.push(Position {
@@ -152,11 +146,11 @@ pub fn petrify(flow: Magma) -> Stone {
 
         for i in 0..points_of_plane {
             stone.positions.push(Position {
-                position: plane.positions[(i as usize)].position,
+                position: plane.positions[i as usize].position,
             });
             let normal = //nrmlz_f32_3(gen_f32_3(0.0, 1.0, &mut rng));
             // find_points_normal(plane.positions[(i as usize)].position, *plane_point);
-            find_points_normal(plane.positions[(i as usize)].position, normal_origin);
+            find_points_normal(plane.positions[i as usize].position, normal_origin);
             stone.normals.push(Normal { normal: normal });
         }
 
@@ -179,7 +173,7 @@ pub fn petrify(flow: Magma) -> Stone {
                 //vertex_plane_one: [u32; 2],
                 [previous_plane[1], previous_plane[2] - 1],
                 //plane_one: [f32; 3],
-                planes_points[(previous_plane[0] as usize)],
+                planes_points[previous_plane[0] as usize],
                 //vertex_plane_two: [u32; 2],
                 [previous_plane[2], previous_plane[2] + points_of_plane - 1],
                 //plane_two: [f32; 3],
@@ -216,7 +210,7 @@ pub fn petrify(flow: Magma) -> Stone {
     return stone;
 }
 
-pub fn petrify_flow(flow: Magma) -> Stone {
+pub fn petrify_flow(_flow: Magma) -> Stone {
     return Stone {
         positions: vec![],
         normals: vec![],
@@ -294,11 +288,11 @@ pub fn find_indices_double_circle(
             // they can be located far away in a single direction
 
             let po1 = sbtr_f32_3(
-                stone.positions[(i as usize)].position,
+                stone.positions[i as usize].position,
                 double_planes_points_center,
             );
             let po2 = sbtr_f32_3(
-                stone.positions[(k as usize)].position,
+                stone.positions[k as usize].position,
                 double_planes_points_center,
             );
 
@@ -314,7 +308,7 @@ pub fn find_indices_double_circle(
 
             for j in single_vertex_plane[0]..=single_vertex_plane[1] {
                 let po3 = sbtr_f32_3(
-                    stone.positions[(j as usize)].position,
+                    stone.positions[j as usize].position,
                     single_planes_points_center,
                 );
                 let nrml_point_3 = dd_f32_3(
@@ -367,7 +361,7 @@ pub fn find_indices_double_circle(
                 loop_for = single_vertex_plane[1] - single_vertex_plane[0] + 1;
             }
 
-            for l in 1..=loop_for {
+            for _l in 1..=loop_for {
                 stone.indices.push(index_double_saved);
                 stone.indices.push(running_index);
                 stone.indices.push(modular_offset_in_range(

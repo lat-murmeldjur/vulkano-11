@@ -1,12 +1,12 @@
 // experimental generic composite reductive approximation outline
 use std::sync::mpsc;
 use std::thread;
-use std::thread::JoinHandle;
+
 
 use crate::f32_3::dd_f32_3;
 use crate::f64_3::mltply_f64_3;
 use crate::magma_ocean::{magma, petrify, Stone};
-use crate::positions::{move_positions, Normal, Position};
+use crate::positions::{move_positions};
 
 pub static ts_f64: f64 = 5.391247 * 1e-44;
 pub static ls_f64: f64 = 299792458.0 * 1000000000.0 * 6.1879273537329 * 1e+25;
@@ -54,14 +54,10 @@ pub fn interact(anom: &mut Anomaly) {
     component_interact(anom);
 }
 
-pub fn component_interact(anom: &mut Anomaly) {
-    for f in &anom.Force {
-        //        for mut a in anom.Anomaly.iter_mut() {
-        //            for mut b in anom.Anomaly.iter_mut() {
-        //                println!("0");
-        //            }
-        //        }
-    }
+pub fn component_interact(_anom: &mut Anomaly) {
+    //    for f in &anom.Force {
+    //
+    //    }
 }
 
 pub fn progress(anom: &mut Anomaly, time: f64) {
@@ -113,7 +109,7 @@ pub fn component_progress(component: &mut Component, time: f64) {
     let inertia_2 = component_property(component, In2);
 
     for c in &mut component.Composition {
-        for mut s in c.Space.iter_mut() {
+        for s in c.Space.iter_mut() {
             let mov0 = mltply_f64_3([inertia_0, inertia_1, inertia_2], ts_f64);
             *s = dd_f32_3(*s, [mov0[0] as f32, mov0[1] as f32, mov0[2] as f32]);
         }
@@ -177,7 +173,7 @@ pub fn add_particle_by(anom: &mut Anomaly, p: Anomaly) {
 }
 
 pub fn particle(position: [f32; 3], properties: Vec<Property>) -> Anomaly {
-    let mut anom = Anomaly {
+    let anom = Anomaly {
         Anomaly: vec![],
         Component: vec![Component {
             Component: vec![],

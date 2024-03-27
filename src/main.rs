@@ -9,10 +9,7 @@
 #![allow(warnings)] // not today, erosion
 
 mod display_mods;
-use display_mods::{
-    display_time_elapsed_nice, oclock, record_nanos, wait_one_millis_and_micros_and_nanos,
-    Groupable,
-};
+use display_mods::{display_time_elapsed_nice, oclock, record_nanos, Groupable};
 
 mod f32_3;
 use f32_3::gen_f32_3;
@@ -21,21 +18,20 @@ mod f64_3;
 use f64_3::{gen_f64_3, mltply_f64_3, nrmlz_f64_3};
 
 mod positions;
-use positions::{move_positions, Normal, Position};
+use positions::{Normal, Position};
 
 mod shapes;
 mod u_modular;
 
 mod magma_ocean;
-use magma_ocean::{magma, petrify, Stone};
+use magma_ocean::Stone;
 
 mod anomaly;
 use anomaly::{add_particle_by, e, ls_f64, progress, q, ts_f64, view, Anomaly};
 
 mod moving_around;
 use moving_around::{
-    move_elevation, move_forwards, move_in_x, move_in_y, move_in_z, move_sideways,
-    rotate_horizontal, rotate_up, rotate_vertical,
+    move_elevation, move_forwards, move_sideways, rotate_horizontal, rotate_up, rotate_vertical,
 };
 
 use cgmath::{Matrix3, Matrix4, Point3, Rad, Vector3};
@@ -79,7 +75,7 @@ use vulkano::{
         GraphicsPipeline, Pipeline, PipelineBindPoint, PipelineLayout,
         PipelineShaderStageCreateInfo,
     },
-    query::{QueryControlFlags, QueryPool, QueryPoolCreateInfo, QueryResultFlags, QueryType},
+    query::{QueryControlFlags, QueryPool, QueryPoolCreateInfo, QueryType},
     render_pass::{Framebuffer, FramebufferCreateInfo, RenderPass, Subpass},
     shader::EntryPoint,
     swapchain::{
@@ -89,21 +85,15 @@ use vulkano::{
     Validated, VulkanError, VulkanLibrary,
 };
 use winit::{
-    dpi::{LogicalPosition, LogicalSize},
-    event::{DeviceEvent, ElementState, Event, KeyEvent, RawKeyEvent, WindowEvent},
-    event_loop::{ActiveEventLoop, ControlFlow, EventLoop},
-    keyboard::{Key, KeyCode, ModifiersState, PhysicalKey},
-
-    // WARNING: This is not available on all platforms (for example on the web).
-    platform::modifier_supplement::KeyEventExtModifierSupplement,
-    raw_window_handle::HasRawWindowHandle,
-    window::{Fullscreen, Window, WindowAttributes, WindowId},
+    event::{DeviceEvent, ElementState, Event, RawKeyEvent, WindowEvent},
+    event_loop::EventLoop,
+    keyboard::{KeyCode, ModifiersState, PhysicalKey},
+    window::{Fullscreen, Window},
 };
 
-use rand::rngs::ThreadRng;
 use rand::Rng;
 
-pub struct bv {
+pub struct Bv {
     pub v: Subbuffer<[Position]>,
     pub n: Subbuffer<[Normal]>,
     pub i: Subbuffer<[u32]>,
@@ -362,7 +352,7 @@ fn main() {
 
     duration_since_epoch_nanos = display_time_elapsed_nice(duration_since_epoch_nanos);
 
-    let mut modifiers = ModifiersState::default();
+    let _modifiers = ModifiersState::default();
 
     // Create a query pool for occlusion queries, with 3 slots.
     let query_pool = QueryPool::new(
@@ -444,7 +434,7 @@ fn main() {
                     turning_down = true;
                 }
                 PhysicalKey::Code(KeyCode::KeyP) => {
-                    if (rot_static) {
+                    if rot_static {
                         rot_static = false;
                     } else {
                         rot_static = true;
@@ -500,7 +490,10 @@ fn main() {
                 _ => (),
             },
 
-            Event::WindowEvent { window_id, event } => match event {
+            Event::WindowEvent {
+                window_id: _,
+                event,
+            } => match event {
                 WindowEvent::CloseRequested => {
                     control_flow.exit();
                 }
@@ -555,12 +548,12 @@ fn main() {
                     progress(&mut anom, ts_f64);
                     let get = view(&mut anom);
 
-                    let mut bvs: Vec<bv> = vec![];
+                    let mut bvs: Vec<Bv> = vec![];
 
                     for mut g in get {
                         let (vertex_buffer, normals_buffer, index_buffer) =
                             load_buffers_short(&mut g, memory_allocator.clone());
-                        bvs.push(bv {
+                        bvs.push(Bv {
                             v: vertex_buffer,
                             n: normals_buffer,
                             i: index_buffer,
@@ -622,7 +615,7 @@ fn main() {
                             100.0,
                         );
 
-                        let mut view = Matrix4::look_at_rh(
+                        let view = Matrix4::look_at_rh(
                             Point3::new(
                                 view_point.position[0],
                                 view_point.position[1],

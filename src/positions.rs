@@ -2,7 +2,7 @@ use crate::f32_3::{
     angle_360_of, dd_f32_3, gen_f32_3_unit_on_point_normal_plane, mltply_f32_3, sbtr_f32_3,
 };
 use rand::rngs::ThreadRng;
-use rand::Rng;
+
 use vulkano::{buffer::BufferContents, pipeline::graphics::vertex_input::Vertex};
 #[derive(BufferContents, Vertex, Debug, Clone, Copy)]
 #[repr(C)]
@@ -28,7 +28,7 @@ pub fn create_points_on_cross_section(
     rng: &mut ThreadRng,
 ) -> Vec<Position> {
     let mut positions = vec![];
-    for i in 1..=points_number {
+    for _i in 1..=points_number {
         let point = gen_f32_3_unit_on_point_normal_plane(planes_normal, plane_point, 1.0, rng);
 
         let angle = angle_360_of(plane_point, point, reference_orthogonal, planes_normal);

@@ -104,7 +104,7 @@ pub fn angle_of(c: [f32; 3], x: [f32; 3], r: [f32; 3]) -> f32 {
         return 0.0;
     }
 
-    let mut angle_of = (dot_product(vector, r) / (vl * vector_length(r)));
+    let mut angle_of = dot_product(vector, r) / (vl * vector_length(r));
 
     if angle_of > 1.0 {
         angle_of = 1.0;
@@ -125,7 +125,7 @@ pub fn angle_360_of(c: [f32; 3], x: [f32; 3], r: [f32; 3], norm: [f32; 3]) -> f3
     }
 
     let vector = nrmlz_f32_3(diff);
-    let mut angle_of = (dot_product(vector, r) / (vector_length(vector) * vector_length(r)));
+    let mut angle_of = dot_product(vector, r) / (vector_length(vector) * vector_length(r));
 
     if angle_of > 1.0 {
         angle_of = 1.0;
@@ -140,7 +140,7 @@ pub fn angle_360_of(c: [f32; 3], x: [f32; 3], r: [f32; 3], norm: [f32; 3]) -> f3
     let n = find_orthogonal_f32_3(norm, r);
 
     // (v−p)⋅n>0
-    if (dot_product(diff, n) < 0.0) {
+    if dot_product(diff, n) < 0.0 {
         return 2.0 * PI - angle;
     }
 

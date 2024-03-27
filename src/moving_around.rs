@@ -1,6 +1,5 @@
 use crate::f32_3::{
     dd_f32_3, dot_product, dstnc_f32_3, find_orthogonal_f32_3, find_points_normal, mltply_f32_3,
-    sbtr_f32_3,
 };
 
 use crate::positions::Position;
@@ -12,7 +11,7 @@ use crate::positions::Position;
 pub fn move_forwards(
     view_point: &mut Position,
     center: &mut Position,
-    up_direction: &mut Position,
+    _up_direction: &mut Position,
     rate: f32,
 ) {
     let direction = mltply_f32_3(
@@ -54,7 +53,7 @@ pub fn move_elevation(
 pub fn move_in_x(
     view_point: &mut Position,
     center: &mut Position,
-    up_direction: &mut Position,
+    _up_direction: &mut Position,
     rate: f32,
 ) {
     view_point.position[0] = view_point.position[0] + rate;
@@ -64,7 +63,7 @@ pub fn move_in_x(
 pub fn move_in_y(
     view_point: &mut Position,
     center: &mut Position,
-    up_direction: &mut Position,
+    _up_direction: &mut Position,
     rate: f32,
 ) {
     view_point.position[1] = view_point.position[1] + rate;
@@ -74,7 +73,7 @@ pub fn move_in_y(
 pub fn move_in_z(
     view_point: &mut Position,
     center: &mut Position,
-    up_direction: &mut Position,
+    _up_direction: &mut Position,
     rate: f32,
 ) {
     view_point.position[2] = view_point.position[2] + rate;
