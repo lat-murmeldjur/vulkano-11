@@ -367,7 +367,7 @@ fn main() {
     //|||\\\
     //|||\\\
 
-    event_loop.run(move |event, control_flow| {
+    let _ = event_loop.run(move |event, control_flow| {
         match event {
             Event::DeviceEvent {
                 event: DeviceEvent::MouseMotion { delta, .. },
