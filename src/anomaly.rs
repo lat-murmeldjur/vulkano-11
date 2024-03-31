@@ -77,17 +77,17 @@ pub fn interact(anom: &mut Anomaly) {
     component_interact(anom, &mut rng);
 }
 
-pub fn anomaly_2_interact(a: &mut Anomaly, b: &mut Anomaly, mut rng: &mut ThreadRng) {
+pub fn anomaly_2_interact(a: &mut Anomaly, b: &mut Anomaly, rng: &mut ThreadRng) {
     for i in a.anomaly.iter_mut() {
         for j in b.anomaly.iter_mut() {
-            anomaly_2_interact(i, j, &mut rng);
+            anomaly_2_interact(i, j, rng);
         }
     }
 
     for df in &a.force {
         for i in 0..a.component.len() {
             for j in 0..b.component.len() {
-                component_2_interact(df, &mut a.component[i], &mut b.component[j], &mut rng);
+                component_2_interact(df, &mut a.component[i], &mut b.component[j], rng);
             }
         }
     }
@@ -116,22 +116,17 @@ pub fn component_interact(_anom: &mut Anomaly, rng: &mut ThreadRng) {
     }
 }
 
-pub fn component_2_interact(
-    df: &Force,
-    a: &mut Component,
-    b: &mut Component,
-    mut rng: &mut ThreadRng,
-) {
+pub fn component_2_interact(df: &Force, a: &mut Component, b: &mut Component, rng: &mut ThreadRng) {
     for i in a.component.iter_mut() {
         for j in b.component.iter_mut() {
-            component_2_interact(df, i, j, &mut rng);
+            component_2_interact(df, i, j, rng);
         }
     }
 
-    force_apply(df, a, b, &mut rng);
+    force_apply(df, a, b, rng);
 }
 
-pub fn force_apply(_f: &Force, a: &mut Component, b: &mut Component, mut rng: &mut ThreadRng) {
+pub fn force_apply(_f: &Force, a: &mut Component, b: &mut Component, rng: &mut ThreadRng) {
     //    a1 = component_property(a, IN0);
     //    a2 = component_property(a, IN1);
     //    a3 = component_property(a, IN2);
@@ -141,12 +136,12 @@ pub fn force_apply(_f: &Force, a: &mut Component, b: &mut Component, mut rng: &m
     //    b3 = component_property(b, IN2);
 
     set_inertia(
-        mltply_f64_3(nrmlz_f64_3(gen_f64_3(0.0, 10.0, &mut rng)), LS_F64),
+        mltply_f64_3(nrmlz_f64_3(gen_f64_3(0.0, 10.0, rng)), LS_F64),
         a,
     );
 
     set_inertia(
-        mltply_f64_3(nrmlz_f64_3(gen_f64_3(0.0, 10.0, &mut rng)), LS_F64),
+        mltply_f64_3(nrmlz_f64_3(gen_f64_3(0.0, 10.0, rng)), LS_F64),
         b,
     );
 }
