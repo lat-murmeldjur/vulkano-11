@@ -6,7 +6,7 @@
 // at your option. All files in the project carrying such
 // notice may not be copied, modified, or distributed except
 // according to those terms.
-//#![allow(warnings)] // not today, erosion
+// #![allow(warnings)] // not today, erosion
 
 mod display_mods;
 use display_mods::{oclock, record_nanos, Groupable};
@@ -120,7 +120,7 @@ fn main() {
         force: vec![],
     };
 
-    let k = 8;
+    let k = 20;
 
     for _ in 0..k {
         add_particle_by(
@@ -356,7 +356,7 @@ fn main() {
     let query_pool = QueryPool::new(
         device.clone(),
         QueryPoolCreateInfo {
-            query_count: 3,
+            query_count: 60,
             ..QueryPoolCreateInfo::query_type(QueryType::Occlusion)
         },
     )

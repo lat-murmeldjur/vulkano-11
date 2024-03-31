@@ -1,10 +1,13 @@
 // experimental generic composite reductive approximation outline
+use rand::rngs::ThreadRng;
 use std::sync::mpsc;
 use std::thread;
 
 use crate::f32_3::dd_f32_3;
 use crate::f64_3::mltply_f64_3;
+use crate::gen_f64_3;
 use crate::magma_ocean::{magma, petrify, Stone};
+use crate::nrmlz_f64_3;
 use crate::positions::move_positions;
 
 pub static TS_F64: f64 = 5.391247 * 1e-44;
@@ -50,13 +53,102 @@ pub fn interact(anom: &mut Anomaly) {
         }
     });
 
-    component_interact(anom);
+    let mut rng = rand::thread_rng();
+
+    for i in 0..anom.anomaly.len() {
+        for j in 0..anom.anomaly.len() {
+            let (e, f) = if i < j {
+                // `i` is in the left half
+                let (left, right) = anom.anomaly.split_at_mut(j);
+                (&mut left[i], &mut right[0])
+            } else if i == j {
+                // cannot obtain two mutable references to the
+                // same element
+                continue;
+            } else {
+                // `i` is in the right half
+                let (left, right) = anom.anomaly.split_at_mut(i);
+                (&mut right[0], &mut left[j])
+            };
+            anomaly_2_interact(e, f, &mut rng);
+        }
+    }
+
+    component_interact(anom, &mut rng);
 }
 
-pub fn component_interact(_anom: &mut Anomaly) {
-    //    for f in &anom.force {
+pub fn anomaly_2_interact(a: &mut Anomaly, b: &mut Anomaly, mut rng: &mut ThreadRng) {
+    for i in a.anomaly.iter_mut() {
+        for j in b.anomaly.iter_mut() {
+            anomaly_2_interact(i, j, &mut rng);
+        }
+    }
+
+    for df in &a.force {
+        for i in 0..a.component.len() {
+            for j in 0..b.component.len() {
+                component_2_interact(df, &mut a.component[i], &mut b.component[j], &mut rng);
+            }
+        }
+    }
+}
+
+pub fn component_interact(_anom: &mut Anomaly, rng: &mut ThreadRng) {
+    for df in &_anom.force {
+        for i in 0.._anom.component.len() {
+            for j in 0.._anom.component.len() {
+                let (e, f) = if i < j {
+                    // `i` is in the left half
+                    let (left, right) = _anom.component.split_at_mut(j);
+                    (&mut left[i], &mut right[0])
+                } else if i == j {
+                    // cannot obtain two mutable references to the
+                    // same element
+                    continue;
+                } else {
+                    // `i` is in the right half
+                    let (left, right) = _anom.component.split_at_mut(i);
+                    (&mut right[0], &mut left[j])
+                };
+                component_2_interact(df, e, f, rng);
+            }
+        }
+    }
+}
+
+pub fn component_2_interact(
+    df: &Force,
+    a: &mut Component,
+    b: &mut Component,
+    mut rng: &mut ThreadRng,
+) {
+    for i in a.component.iter_mut() {
+        for j in b.component.iter_mut() {
+            component_2_interact(df, i, j, &mut rng);
+        }
+    }
+
+    force_apply(df, a, b, &mut rng);
+}
+
+pub fn force_apply(_f: &Force, a: &mut Component, b: &mut Component, mut rng: &mut ThreadRng) {
+    //    a1 = component_property(a, IN0);
+    //    a2 = component_property(a, IN1);
+    //    a3 = component_property(a, IN2);
     //
-    //    }
+    //    b1 = component_property(b, IN0);
+    //    b2 = component_property(b, IN1);
+    //    b3 = component_property(b, IN2);
+
+    set_inertia(
+        mltply_f64_3(nrmlz_f64_3(gen_f64_3(0.0, 10.0, &mut rng)), LS_F64),
+        a,
+    );
+
+    set_inertia(
+        mltply_f64_3(nrmlz_f64_3(gen_f64_3(0.0, 10.0, &mut rng)), LS_F64),
+        b,
+    );
 }
 
 pub fn progress(anom: &mut Anomaly, time: f64) {
@@ -73,6 +165,27 @@ pub fn progress(anom: &mut Anomaly, time: f64) {
             h.join().unwrap();
         }
     });
+
+    let mut rng = rand::thread_rng();
+
+    for i in 0..anom.anomaly.len() {
+        for j in 0..anom.anomaly.len() {
+            let (e, f) = if i < j {
+                // `i` is in the left half
+                let (left, right) = anom.anomaly.split_at_mut(j);
+                (&mut left[i], &mut right[0])
+            } else if i == j {
+                // cannot obtain two mutable references to the
+                // same element
+                continue;
+            } else {
+                // `i` is in the right half
+                let (left, right) = anom.anomaly.split_at_mut(i);
+                (&mut right[0], &mut left[j])
+            };
+            anomaly_2_interact(e, f, &mut rng);
+        }
+    }
 
     let steps = (time / TS_F64) as u64;
     for _ in 0..steps {
@@ -99,6 +212,14 @@ pub fn component_property(component: &mut Component, name: f64) -> f64 {
         .collect();
 
     return prop[0].value;
+}
+
+pub fn set_component_property(n: f64, s: f64, component: &mut Component) {
+    for p in component.property.iter_mut() {
+        if n == p.name {
+            *p = Property { name: n, value: s };
+        }
+    }
 }
 
 pub fn component_progress(component: &mut Component, time: f64) {
@@ -194,6 +315,12 @@ pub fn particle(position: [f32; 3], properties: Vec<Property>) -> Anomaly {
 //
 
 // future ref example
+
+pub fn set_inertia(in0: [f64; 3], c: &mut Component) {
+    set_component_property(IN0, in0[0], c);
+    set_component_property(IN1, in0[1], c);
+    set_component_property(IN2, in0[2], c);
+}
 
 static EC: f64 = 313.0;
 static SP: f64 = 591.0;
