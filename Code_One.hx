@@ -11,6 +11,7 @@ class Code_One {
 		var w3:String = './ohio.note';
 
 		clientele('cargo', ['update'], count);
+		clientele('cargo', ['fix'], count);
 		var build:Array<Null<Bool>> = [null];
 		clientele('cargo', ['build'], count, build);
 

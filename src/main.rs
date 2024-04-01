@@ -120,7 +120,7 @@ fn main() {
         force: vec![],
     };
 
-    let k = 2;
+    let k = 20;
 
     for _ in 0..k {
         add_particle_by(

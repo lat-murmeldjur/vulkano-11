@@ -217,6 +217,12 @@ pub fn set_component_property(n: f64, s: f64, component: &mut Component) {
     }
 }
 
+pub fn set_inertia(in0: [f64; 3], c: &mut Component) {
+    set_component_property(IN0, in0[0], c);
+    set_component_property(IN1, in0[1], c);
+    set_component_property(IN2, in0[2], c);
+}
+
 pub fn component_progress(component: &mut Component, time: f64) {
     for mut c in component.component.iter_mut() {
         component_progress(&mut c, time);
@@ -310,12 +316,6 @@ pub fn particle(position: [f32; 3], properties: Vec<Property>) -> Anomaly {
 //
 
 // future ref example
-
-pub fn set_inertia(in0: [f64; 3], c: &mut Component) {
-    set_component_property(IN0, in0[0], c);
-    set_component_property(IN1, in0[1], c);
-    set_component_property(IN2, in0[2], c);
-}
 
 static EC: f64 = 313.0;
 static SP: f64 = 591.0;
