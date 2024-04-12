@@ -10,6 +10,7 @@ class Code_One {
 		var w2:String = './featuring.dt';
 		var w3:String = './ohio.note';
 
+		clientele('rustup', ['update'], count);
 		clientele('cargo', ['update'], count);
 		clientele('cargo', ['fix'], count);
 		var build:Array<Null<Bool>> = [null];
