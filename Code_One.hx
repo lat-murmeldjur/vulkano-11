@@ -12,7 +12,7 @@ class Code_One {
 
 		clientele('rustup', ['update'], count);
 		clientele('cargo', ['update'], count);
-		clientele('cargo', ['fix'], count);
+		clientele('cargo', ['fix', '--allow-staged', '--allow-dirty'], count);
 		var build:Array<Null<Bool>> = [null];
 		clientele('cargo', ['build'], count, build);
 
