@@ -51,8 +51,15 @@ pub fn interact(anom: &mut Anomaly) {
         }
     });
 
+    // access non-overlapping disjoint pairs of vector elements concurrently with social golfer problem solution
+    // since interaction is bidirectional, ordering is irrelevant
+
     let klen = anom.anomaly.len();
     let kl2 = klen / 2;
+    let mut sym = false;
+    if klen % 2 == 0 {
+        sym = true;
+    }
     for i in 1..=kl2 {
         let mut skip: HashSet<usize> = HashSet::new();
         let mut exit_level = false;
@@ -88,6 +95,9 @@ pub fn interact(anom: &mut Anomaly) {
                         done.insert(k);
                         skip.insert(k);
                         skip.insert(pair as usize);
+                        if sym && i == kl2 {
+                            done.insert(pair as usize);
+                        }
                     }
                 }
 
