@@ -1,14 +1,12 @@
-// experimental generic composite reductive approximation outline
-use rand::rngs::ThreadRng;
+use std::collections::{HashMap, HashSet};
 use std::sync::mpsc;
 use std::thread;
 
 use crate::f32_3::dd_f32_3;
 use crate::f64_3::mltply_f64_3;
-use crate::gen_f64_3;
 use crate::magma_ocean::{magma, petrify, Stone};
-use crate::nrmlz_f64_3;
 use crate::positions::move_positions;
+use crate::u_modular::modular_offset_in_range;
 
 pub static TS_F64: f64 = 5.391247 * 1e-44;
 pub static LS_F64: f64 = 299792458.0 * 1000000000.0 * 6.1879273537329 * 1e+25;
@@ -53,97 +51,131 @@ pub fn interact(anom: &mut Anomaly) {
         }
     });
 
-    let mut rng = rand::thread_rng();
+    let klen = anom.anomaly.len();
+    let kl2 = klen / 2;
+    for i in 1..=kl2 {
+        let mut skip: HashSet<usize> = HashSet::new();
+        let mut exit_level = false;
 
-    for i in 0..anom.anomaly.len() {
-        for j in 0..anom.anomaly.len() {
-            let (e, f) = if i < j {
-                // `i` is in the left half
-                let (left, right) = anom.anomaly.split_at_mut(j);
-                (&mut left[i], &mut right[0])
-            } else if i == j {
-                // cannot obtain two mutable references to the
-                // same element
-                continue;
-            } else {
-                // `i` is in the right half
-                let (left, right) = anom.anomaly.split_at_mut(i);
-                (&mut right[0], &mut left[j])
-            };
-            anomaly_2_interact(e, f, &mut rng);
+        while !exit_level {
+            let mut pull: HashMap<usize, usize> = HashMap::new();
+            let mut done: HashSet<usize> = HashSet::new();
+
+            let mut instructions_chan: Vec<mpsc::Sender<&mut Anomaly>> = vec![];
+            thread::scope(|s| {
+                let mut handles: Vec<thread::ScopedJoinHandle<()>> = vec![];
+                for _ in 0..kl2 {
+                    let (tx, rx) = mpsc::channel();
+                    instructions_chan.push(tx);
+                    let handle = s.spawn(move || {
+                        let mut a = rx.recv().unwrap();
+                        let mut b = rx.recv().unwrap();
+                        anomaly_2_interact(&mut a, &mut b);
+                    });
+                    handles.push(handle);
+                }
+
+                let mut firstopen: usize = 0;
+                //
+
+                for k in 0..anom.anomaly.len() {
+                    let pair = modular_offset_in_range(k as u32, i as u32, 0, (klen - 1) as u32);
+                    if !done.contains(&k) && !skip.contains(&k) && !skip.contains(&(pair as usize))
+                    {
+                        pull.insert(k, firstopen);
+                        pull.insert(pair as usize, firstopen);
+                        firstopen += 1;
+                        done.insert(k);
+                        skip.insert(k);
+                        skip.insert(pair as usize);
+                    }
+                }
+
+                for (k, a) in anom.anomaly.iter_mut().enumerate() {
+                    instructions_chan[pull[&k]].send(a).unwrap();
+                }
+
+                for h in handles {
+                    h.join().unwrap();
+                }
+            });
+
+            if done.len() == klen {
+                exit_level = true;
+            }
         }
     }
 
-    component_interact(anom, &mut rng);
+    component_interact(anom);
 }
 
-pub fn anomaly_2_interact(a: &mut Anomaly, b: &mut Anomaly, rng: &mut ThreadRng) {
+//fn iter_chunks<T, const CHUNK_SIZE: usize>(
+//    slice: &mut [T],
+//) -> impl Iterator<Item = [&mut T; CHUNK_SIZE]> + '_ {
+//    assert_eq!(slice.len() % CHUNK_SIZE, 0);
+//    let len = slice.len();
+//    let mut a: [_; CHUNK_SIZE] = array_collect(
+//        slice
+//            .chunks_mut(len / CHUNK_SIZE)
+//            .map(|iter| iter.iter_mut()),
+//    );
+//    (0..len / CHUNK_SIZE).map(move |_| array_collect(a.iter_mut().map(|i| i.next().unwrap())))
+//}
+
+fn array_collect<T, const N: usize>(mut iter: impl Iterator<Item = T>) -> [T; N] {
+    let a: [(); N] = [(); N];
+    a.map(|_| iter.next().unwrap())
+}
+
+pub fn anomaly_2_interact(a: &mut Anomaly, b: &mut Anomaly) {
     for i in a.anomaly.iter_mut() {
         for j in b.anomaly.iter_mut() {
-            anomaly_2_interact(i, j, rng);
+            anomaly_2_interact(i, j);
         }
     }
 
     for df in &a.force {
         for i in 0..a.component.len() {
             for j in 0..b.component.len() {
-                component_2_interact(df, &mut a.component[i], &mut b.component[j], rng);
+                component_2_interact(df, &mut a.component[i], &mut b.component[j]);
             }
         }
     }
 }
 
-pub fn component_interact(_anom: &mut Anomaly, rng: &mut ThreadRng) {
+pub fn component_interact(_anom: &mut Anomaly) {
     for df in &_anom.force {
         for i in 0.._anom.component.len() {
             for j in 0.._anom.component.len() {
                 let (e, f) = if i < j {
-                    // `i` is in the left half
                     let (left, right) = _anom.component.split_at_mut(j);
                     (&mut left[i], &mut right[0])
                 } else if i == j {
-                    // cannot obtain two mutable references to the
-                    // same element
                     continue;
                 } else {
-                    // `i` is in the right half
                     let (left, right) = _anom.component.split_at_mut(i);
                     (&mut right[0], &mut left[j])
                 };
-                component_2_interact(df, e, f, rng);
+                component_2_interact(df, e, f);
             }
         }
     }
 }
 
-pub fn component_2_interact(df: &Force, a: &mut Component, b: &mut Component, rng: &mut ThreadRng) {
+pub fn component_2_interact(df: &Force, a: &mut Component, b: &mut Component) {
     for i in a.component.iter_mut() {
         for j in b.component.iter_mut() {
-            component_2_interact(df, i, j, rng);
+            component_2_interact(df, i, j);
         }
     }
 
-    force_apply(df, a, b, rng);
+    force_apply(df, a, b);
 }
 
-pub fn force_apply(_f: &Force, a: &mut Component, b: &mut Component, rng: &mut ThreadRng) {
-    //    a1 = component_property(a, IN0);
-    //    a2 = component_property(a, IN1);
-    //    a3 = component_property(a, IN2);
-    //
-    //    b1 = component_property(b, IN0);
-    //    b2 = component_property(b, IN1);
-    //    b3 = component_property(b, IN2);
+pub fn force_apply(_f: &Force, a: &mut Component, b: &mut Component) {
+    set_inertia([0.0, 0.0, 0.0], a);
 
-    set_inertia(
-        mltply_f64_3(nrmlz_f64_3(gen_f64_3(0.0, 10.0, rng)), LS_F64),
-        a,
-    );
-
-    set_inertia(
-        mltply_f64_3(nrmlz_f64_3(gen_f64_3(0.0, 10.0, rng)), LS_F64),
-        b,
-    );
+    set_inertia([0.0, 0.0, 0.0], b);
 }
 
 pub fn progress(anom: &mut Anomaly, time: f64) {
@@ -161,24 +193,18 @@ pub fn progress(anom: &mut Anomaly, time: f64) {
         }
     });
 
-    let mut rng = rand::thread_rng();
-
     for i in 0..anom.anomaly.len() {
         for j in 0..anom.anomaly.len() {
             let (e, f) = if i < j {
-                // `i` is in the left half
                 let (left, right) = anom.anomaly.split_at_mut(j);
                 (&mut left[i], &mut right[0])
             } else if i == j {
-                // cannot obtain two mutable references to the
-                // same element
                 continue;
             } else {
-                // `i` is in the right half
                 let (left, right) = anom.anomaly.split_at_mut(i);
                 (&mut right[0], &mut left[j])
             };
-            anomaly_2_interact(e, f, &mut rng);
+            anomaly_2_interact(e, f);
         }
     }
 
@@ -309,14 +335,6 @@ pub fn particle(position: [f32; 3], properties: Vec<Property>) -> Anomaly {
     anom
 }
 
-//
-
-//
-
-//
-
-// future ref example
-
 static EC: f64 = 313.0;
 static SP: f64 = 591.0;
 static MS: f64 = 343.0;
@@ -412,7 +430,6 @@ pub fn particular(coordinates: Vec<[f32; 3]>) -> Vec<[f32; 3]> {
 pub fn force_base() -> Force {
     return Force {
         force: vec![
-            // S
             Force {
                 force: vec![],
                 range: vec![1e-15],
@@ -425,7 +442,6 @@ pub fn force_base() -> Force {
                     }],
                 }],
             },
-            // EM
             Force {
                 force: vec![],
                 range: vec![f64::MAX],
@@ -438,10 +454,8 @@ pub fn force_base() -> Force {
                     }],
                 }],
             },
-            // W
             Force {
                 force: vec![
-                    // N
                     Force {
                         force: vec![],
                         range: vec![1e-18],
@@ -454,7 +468,6 @@ pub fn force_base() -> Force {
                             }],
                         }],
                     },
-                    // C
                     Force {
                         force: vec![],
                         range: vec![1e-18],
@@ -471,7 +484,6 @@ pub fn force_base() -> Force {
                 range: vec![],
                 domain: vec![],
             },
-            // G
             Force {
                 force: vec![],
                 range: vec![f64::MAX],
@@ -489,7 +501,3 @@ pub fn force_base() -> Force {
         domain: vec![],
     };
 }
-
-// pub fn add_particle(anom: &mut Anomaly, position: [f32; 3], properties: Vec<Property>) {
-//     anom.anomaly.push(particle(position, properties));
-// }

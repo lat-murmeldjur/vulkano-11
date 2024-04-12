@@ -40,3 +40,7 @@ pub fn display_time_elapsed_nice(recorded_start: u128) -> u128 {
     ); // this is great
     return current_time;
 }
+
+// pub fn add_particle(anom: &mut Anomaly, position: [f32; 3], properties: Vec<Property>) {
+//     anom.anomaly.push(particle(position, properties));
+// }
