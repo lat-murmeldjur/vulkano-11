@@ -61,17 +61,34 @@ pub fn interact(anom: &mut Anomaly) {
         sym = true;
     }
     for i in 1..=kl2 {
-        let mut skip: HashSet<usize> = HashSet::new();
+        let mut done: HashSet<usize> = HashSet::new();
         let mut exit_level = false;
 
         while !exit_level {
             let mut pull: HashMap<usize, usize> = HashMap::new();
-            let mut done: HashSet<usize> = HashSet::new();
+            let mut skip: HashSet<usize> = HashSet::new();
 
+            let mut firstopen: usize = 0;
             let mut instructions_chan: Vec<mpsc::Sender<&mut Anomaly>> = vec![];
+
+            for k in 0..anom.anomaly.len() {
+                let pair = modular_offset_in_range(k as u32, i as u32, 0, (klen - 1) as u32);
+                if !done.contains(&k) && !skip.contains(&k) && !skip.contains(&(pair as usize)) {
+                    pull.insert(k, firstopen);
+                    pull.insert(pair as usize, firstopen);
+                    firstopen += 1;
+                    done.insert(k);
+                    skip.insert(k);
+                    skip.insert(pair as usize);
+                    if sym && i == kl2 {
+                        done.insert(pair as usize);
+                    }
+                }
+            }
+
             thread::scope(|s| {
                 let mut handles: Vec<thread::ScopedJoinHandle<()>> = vec![];
-                for _ in 0..kl2 {
+                for _ in 0..pull.len() / 2 {
                     let (tx, rx) = mpsc::channel();
                     instructions_chan.push(tx);
                     let handle = s.spawn(move || {
@@ -82,27 +99,12 @@ pub fn interact(anom: &mut Anomaly) {
                     handles.push(handle);
                 }
 
-                let mut firstopen: usize = 0;
                 //
 
-                for k in 0..anom.anomaly.len() {
-                    let pair = modular_offset_in_range(k as u32, i as u32, 0, (klen - 1) as u32);
-                    if !done.contains(&k) && !skip.contains(&k) && !skip.contains(&(pair as usize))
-                    {
-                        pull.insert(k, firstopen);
-                        pull.insert(pair as usize, firstopen);
-                        firstopen += 1;
-                        done.insert(k);
-                        skip.insert(k);
-                        skip.insert(pair as usize);
-                        if sym && i == kl2 {
-                            done.insert(pair as usize);
-                        }
-                    }
-                }
-
                 for (k, a) in anom.anomaly.iter_mut().enumerate() {
-                    instructions_chan[pull[&k]].send(a).unwrap();
+                    if pull.contains_key(&k) {
+                        instructions_chan[pull[&k]].send(a).unwrap();
+                    }
                 }
 
                 for h in handles {
