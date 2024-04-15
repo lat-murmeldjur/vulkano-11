@@ -65,8 +65,8 @@ pub fn petrify(flow: Magma) -> Stone {
     let mut rng = rand::thread_rng();
     let points_diff = sbtr_f32_3(flow.positions[1].position, flow.positions[0].position);
     let planes_normal: [f32; 3] = nrmlz_f32_3(points_diff);
-    let planes_number = 4; // rng.gen_range(40..42);
-    let f__max_points = 3.0; // rng.gen_range(40.0..42.0);
+    let planes_number = 30; // rng.gen_range(40..42);
+    let f__max_points = 30.0; // rng.gen_range(40.0..42.0);
     let max_points = f__max_points;
     let mut points_of_plane: u32 = 3;
     let reference_orthogonal = gen_rthgnl_f32_3(planes_normal, &mut rng);
